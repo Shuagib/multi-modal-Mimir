@@ -17,28 +17,31 @@ MLP_IN_DIM = 768
 MLP_HID_DIM = 2048
 MLP_OUT_DIM = 1536
 
+MLP_norm_scale = 0.00906
+
 vm = SigLIP2(model_name=vm_model_name, device=device)
-mlp = MLP(MLP_IN_DIM, MLP_HID_DIM, MLP_OUT_DIM).to(device)
+mlp = MLP(MLP_IN_DIM, MLP_HID_DIM, MLP_OUT_DIM, MLP_norm_scale).to(device)
 llm = Mimir(model_name=llm_model_name, device=device)
 
 prompts = [
-    {"role": "user", "content": "Beskriv manden på billedet"}
+    {"role": "user", "content": "Describe the man in the image"}
 ]
 
-vision_prompts = insert_special_tokens(prompts)
 image_files = [
     "shuggibuggidubbi.png"
 ]
 
 images = [Image.open(IMAGE_DIR / name) for name in image_files]
 
-for prompt, image  in zip(vision_prompts, images):
+for prompt, image  in zip(prompts, images):
     embedded_prompt = llm.embed(prompt) # [1, 20, 1536]
     embedded_image_patches = vm.embed(image) # [1, 256, 768]
     projected_embedded_patches = mlp(embedded_image_patches)
     combined_embedding = inject_patches(projected_embedded_patches, embedded_prompt)
+    prompt_embedding = embedded_prompt
+
     output = llm.generate_and_decode(combined_embedding)
-    
-    #print("prompt emb size", embedded_prompt.shape)
-    #print("image emb size", embedded_image_patches.shape)
+    print(output)
+
+    output = llm.generate_and_decode(prompt_embedding)
     print(output)
