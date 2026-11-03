@@ -25,10 +25,14 @@ class Mimir():
 
     def generate_and_decode(self, input_embeddings: torch.Tensor, max_new_tokens: int = 256) -> str:
         attention_mask = torch.ones(input_embeddings.shape[0:2], dtype=torch.long, device=self.model.device)
+        token_type_ids = torch.ones_like(attention_mask)
+        print(f"attention_mask: {attention_mask.shape}, \n token_type_ids {token_type_ids.shape}")
+
         with torch.no_grad():
                     outputs = self.model.generate(
                         inputs_embeds=input_embeddings,
                         attention_mask=attention_mask,
+                        token_type_ids=token_type_ids,
                         max_new_tokens=max_new_tokens)
         text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
         return text
