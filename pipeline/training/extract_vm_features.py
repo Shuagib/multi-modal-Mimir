@@ -57,7 +57,7 @@ def main() -> None:
     
         with open(args.out / f"features-{shard_id:05d}.jsonl", "w") as fh:
             for _, cap in shard:
-                fh.write(json.dumps({"caption": cap}))
+                fh.write(json.dumps({"caption": cap}) + "\n")
 
         log.info("shard %d: %d samples", shard_id, len(shard))
         shard, shard_id = [], shard_id + 1
@@ -70,19 +70,19 @@ def main() -> None:
             if len(batch_rows) < args.batch_size:
                 continue
 
-            images = list(pool.map(lambda r: fetch(r["images_url"]), batch_rows)) # collect images
+            images = list(pool.map(lambda r: fetch(r["image_url"]), batch_rows)) # collect images
             pairs = [(im, r["caption"]) for im, r in zip(images, batch_rows) if im] #add image-caption pair
             batch_rows = []
             if not pairs:
                 continue
 
-            px = processor(images=[im for im, _ in pairs], return_tensors="pt")
+            px = processor(images=[im for im, _ in pairs], return_tensors="pt").to(device)
             with torch.no_grad():
-                output = vm(**px).last_hidden_state
+                output = vm.model(**px).last_hidden_state
             output = output.cpu().numpy().astype(np.float16)
 
             for feature, (_,caption) in zip(output, pairs):
-                shard.append(feature, caption)
+                shard.append((feature, caption))
                 kept += 1
                 if len(shard) >= args.shard_size:
                     flush()
