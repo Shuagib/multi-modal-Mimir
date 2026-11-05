@@ -44,6 +44,11 @@ class Sample(NamedTuple):
     caption: str
     url: str
 
+class FeatureSample(NamedTuple):
+    image: np.ndarray
+    caption: str
+    url: str
+
 class ShardWriter:
     """Collects samples and writes them to disk in fixed-size batches."""
 
@@ -52,12 +57,12 @@ class ShardWriter:
         self.shard_size = shard_size
         self.pipeline_mode = pipeline_mode
         self.out_dir.mkdir(parents=True,exist_ok=True)
-        self.buffer: list[tuple[np.ndarray, str, str]] = []
+        self.buffer: list[FeatureSample] = []
         self.current_shard_id = 0
         self.total_added_samples = 0
 
     def add(self, feature: np.ndarray, caption: str, url: str) -> None:
-        self.buffer.append((feature, caption, url))
+        self.buffer.append(FeatureSample(feature, caption, url))
         self.total_added_samples += 1
         if len(self.buffer) >= self.shard_size:
             self.flush()
@@ -68,10 +73,10 @@ class ShardWriter:
             return
         feature_stem = f"{self.current_shard_id:05d}" # like f"{1234:05d}" ->  "01234" from features-01234.npy
         np.save(self.out_dir / f"features-{feature_stem}.npy",
-            np.stack([f for f , _, _ in self.buffer]))
+            np.stack([s.image for s in self.buffer]))
         with open(self.out_dir / f"caption-{feature_stem}.jsonl", "w") as fh:
-            for _, cap, url in self.buffer:
-                fh.write(json.dumps({"caption": cap, "image_url": url}) + "\n")
+            for s in self.buffer:
+                fh.write(json.dumps({"caption": s.caption, "image_url": s.url}) + "\n")
 
         log.info("%s shard %s: %d samples", self.pipeline_mode, feature_stem, len(self.buffer))
         self.buffer = []
