@@ -21,7 +21,8 @@ log.setLevel(logging.INFO)
 for noisy in ("httpx", "httpx2", "httpcore", "huggingface_hub", "urllib3", "filelock"):
     logging.getLogger(noisy).setLevel(logging.WARNING)
 
-
+# python -m pipeline.training.extract_vm_features --out /tmp/feats-test \ --n 100 --eval-n 10 --shard-size 5 --batch-size 4 --save-eval-images
+# cp -r /tmp/feats-test ~/GitHub/multi-modal-Mimir/data
 
 # feature extraction pipeline
 

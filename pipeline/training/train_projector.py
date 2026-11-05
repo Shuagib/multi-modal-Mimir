@@ -12,6 +12,9 @@ from pipeline.training.config import ProjectorTrainConfig
 
 NUM_PATCHES = 256
 
+# python -m pipeline.training.extract_vm_features --out /tmp/feats-test \ --n 100 --eval-n 10 --shard-size 5 --batch-size 4 --save-eval-images
+# cp -r /tmp/feats-test ~/GitHub/multi-modal-Mimir/data
+
 class FeatureDataset(Dataset):
     """Precomputed SigLIP2 feature + captions from extract_vm_features.py."""
     def __init__(self, shard_dir: Path) -> None:
