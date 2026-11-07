@@ -9,6 +9,8 @@ import torch
 from PIL import Image, UnidentifiedImageError
 from vision_model.model import SigLIP2
 from typing import NamedTuple
+from collections.abc import Callable
+
 
 ### LOGGING
 import transformers
@@ -22,7 +24,30 @@ for noisy in ("httpx", "httpx2", "httpcore", "huggingface_hub", "urllib3", "file
     logging.getLogger(noisy).setLevel(logging.WARNING)
 
 # python -m pipeline.training.extract_vm_features --out data --n 100 --eval-n 10 --shard-size 5 --batch-size 4 --save-eval-images
-# cp -r /tmp/feats-test ~/GitHub/multi-modal-Mimir/data
+
+# pipeline/training/sources.py
+
+class Source(NamedTuple):
+    """How to turn one HF row in to (image, prompt, target)."""
+    hf_path: str
+    split: str
+    image_field: str
+    to_text: Callable[[dict], tuple[str, str]]
+
+def _cap(row:dict) -> tuple[str, str]:
+    return "Describe the image", row["caption"]
+
+def _count(row: dict) -> tuple[str, str]:
+    return f"Hor many {row['label']} are there in the image", str(row("count"))
+
+def _cap_qa(row: dict) -> tuple[str, str]:
+    return f"Hor many {row['label']} are there in the image", str(row("count"))
+
+SOURCES = {
+    "pixmo-cap":    Source("allenai/pixmo-cap",    "train", "image_url", _cap),
+    "pixmo-count":  Source("allenai/pixmo-count",  "train", "image_url", _count),
+    "pixmo-cap-qa": Source("allenai/pixmo-cap-qa", "train", "image_url", _cap_qa),
+}
 
 # feature extraction pipeline
 
