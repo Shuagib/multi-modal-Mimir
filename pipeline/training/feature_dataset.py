@@ -9,7 +9,7 @@ class FeatureDataset(Dataset):
     """Precomputed SigLIP2 feature + captions from extract_vm_features.py."""
     def __init__(self, shard_dir: Path) -> None:
         self.shard_dir = Path(shard_dir)
-        self.feature_files = sorted(self.shard_dir.glob("features-*.npy."))
+        self.feature_files = sorted(self.shard_dir.glob("features-*.npy"))
         if not self.feature_files:
             raise FileNotFoundError(f"no feature shards in {shard_dir}")
 
