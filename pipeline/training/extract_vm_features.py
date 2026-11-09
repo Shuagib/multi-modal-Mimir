@@ -44,7 +44,8 @@ def _cap_qa(row: dict) -> tuple[str, str]:
     return f"Hor many {row['label']} are there in the image", str(row("count"))
 
 SOURCES = {
-    "pixmo-cap":    Source("allenai/pixmo-cap",    "train", "image_url", _cap),
+    "pixmo-cap":    Source("allenai/pixmo-cap",    "tr" \
+    "ain", "image_url", _cap),
     "pixmo-count":  Source("allenai/pixmo-count",  "train", "image_url", _count),
     "pixmo-cap-qa": Source("allenai/pixmo-cap-qa", "train", "image_url", _cap_qa),
 }
