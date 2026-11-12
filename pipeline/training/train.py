@@ -1,14 +1,16 @@
 import logging
 import torch
+from pathlib import Path
+from PIL import Image
+
 from torch.utils.data import DataLoader
 # from transformers import get_constant_schedule_with_warmup
 
-## SImple 1 image ovefit test on mac
-from torch.utils.data import Subset
 
 
 from language_model.model import Mimir
 from projector.model import MLP
+from vision_model.model import SigLIP2
 from pipeline.training.config import ProjectorTrainConfig
 from pipeline.training.feature_dataset import FeatureDataset
 
@@ -82,4 +84,33 @@ for e in range(c.epochs):
         optimizer.zero_grad()
         print(f"{e+1:>6} | {batch_num+1:>6} | {mimir_loss.item():>8.4f}")
 
+    llm.model.eval()
+    mlp.eval()
 
+    # eval_data = FeatureDataset(c.train_dir)
+
+    vm = SigLIP2(model_name=c.vision_model_name, device=device)
+
+    image_path = Path("test_images/shuggibuggidubbi.png")
+    prompt = ["Describe the man in the image",
+              "How many eyes doe this paricular man have",
+              "Does this man look kappy or sad?",
+              "What ethnic race is this man?"]
+
+    with torch.no_grad():
+        img = Image.open(image_path).convert("RBG")
+        features = vm.embed(img)
+        img_emb = mlp(features.float())
+
+        prompt_ids = llm.tokenizer.apply_chat_template(
+            [{"role": "user", "content": prompt[0]}],
+            add_generation_prompt=True, return_tensors="pt")["input_ids"].to(device)
+
+        txt_emb = torch.cat([img.emb.to(txt_emb.dtype), txt_emb], dim=1)
+
+    print("\nprompt: ", prompt)
+    print("generated:", llm.generate_and_decode(inputs, max_new_tokens=100))
+
+
+    # for batch in eval_data:
+        # features = batch["features"].unsqueeze(0).to(device).float()   # (1, 256, 768)
