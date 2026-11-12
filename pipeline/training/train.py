@@ -103,7 +103,7 @@ with torch.no_grad():
     img_emb = mlp(features.float())
 
     prompt_ids = llm.tokenizer.apply_chat_template(
-        [{"role": "user", "content": prompt[0]}],
+        [{"role": "user", "content": prompt[3]}],
         add_generation_prompt=True, return_tensors="pt")["input_ids"].to(device)
     txt_emb = llm.embedding(prompt_ids)
 

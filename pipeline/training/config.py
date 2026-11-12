@@ -24,7 +24,7 @@ class ProjectorTrainConfig:
     # Measured std of Mimir's input embedding table. The LM multiplies inputs_embeds
     # by sqrt(hidden_size) internally, so the projector must emit raw-table scale.
     target_rms: float = 0.009060
-    epochs = 20
+    epochs = 10
 
     batch_size: int = 4
     learning_rate: float = 1e-3
