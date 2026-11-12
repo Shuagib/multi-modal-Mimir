@@ -27,7 +27,7 @@ class FeatureDataset(Dataset):
         shard = int(np.searchsorted(self.offsets, index, side="right")) - 1 # returns the position where index would be inserted to keep the list sorted.
         local = index - self.offsets[shard]
         if shard not in self._open:
-            self._open[shard] = np.load(self.feature_files[shard], mmap_mode="r")
+            self._open[shard] = np.load(self.feature_files[shard], mmap_mode="r") # read mode (so it doesnt fill the RAM)
         return {
             "features": torch.from_numpy(np.array(self._open[shard][local])),
             "caption": self.captions[shard][local]
@@ -42,4 +42,4 @@ class FeatureDataset(Dataset):
                 raise ValueError(f"{path.name}")
             self.captions.append(captions)
             self.offsets.append(self.total)
-            self.total =+ len(captions)
+            self.total += len(captions)

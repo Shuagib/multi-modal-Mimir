@@ -3,6 +3,10 @@ import torch
 from torch.utils.data import DataLoader
 # from transformers import get_constant_schedule_with_warmup
 
+## SImple 1 image ovefit test on mac
+from torch.utils.data import Subset
+
+
 from language_model.model import Mimir
 from projector.model import MLP
 from pipeline.training.config import ProjectorTrainConfig
@@ -18,6 +22,8 @@ mlp = MLP(c.mlp_in_dim, c.mlp_hidden_dim, c.mlp_out_dim, c.target_rms).to(device
 llm = Mimir(model_name=c.llm_model_name, device=device)
 
 train_data = FeatureDataset(c.train_dir)
+# train_data = Subset(FeatureDataset(c.train_dir), [0])   # only sample 0
+
 loader = DataLoader(train_data, batch_size=c.batch_size, shuffle=True)
 
 prompt_ids = llm.tokenizer.apply_chat_template(
@@ -31,8 +37,10 @@ optimizer = torch.optim.AdamW([
 ])
 
 llm.model.train()
-
-for batch in loader:
+# for step in range(200):
+    # print(step)
+for batch_num, batch in enumerate(loader):
+    print(batch_num)
     features = batch["features"].to(device).float()
     captions = batch["caption"]
 
@@ -44,7 +52,7 @@ for batch in loader:
     tok = llm.tokenizer(
         [cap + eos for cap in captions],
         add_special_tokens=False, padding=True, padding_side="right", return_tensors="pt").to(device)
-    
+
     caption_ids = tok.input_ids
     caption_mask = tok.attention_mask
                     
@@ -64,12 +72,7 @@ for batch in loader:
     token_type_ids[:, :prefix] = 1
 
     loss = llm.model(inputs_embeds=inputs, attention_mask=attention_mask, labels=labels, token_type_ids=token_type_ids).loss
-
     loss.backward()
     optimizer.step()
     optimizer.zero_grad()
     print(loss.item())
-
-
-
-
