@@ -43,7 +43,7 @@ llm.model.train()
 print(f"{'epoch':>6} | {'batch':>6} | {'loss':>8}")
 print("-" * 26)
 
-for e in range(c.epochs):
+for e in range(1):
     for batch_num, batch in enumerate(loader):
 
         features = batch["features"].to(device).float()
@@ -108,7 +108,7 @@ with torch.no_grad():
     txt_emb = llm.embedding(prompt_ids)
 
 
-    inputs = torch.cat([img.emb.to(txt_emb.dtype), txt_emb], dim=1)
+    inputs = torch.cat([img_emb.to(txt_emb.dtype), txt_emb], dim=1)
 
 print("\nprompt: ", prompt)
 print("generated:", llm.generate_and_decode(inputs, max_new_tokens=100))
