@@ -37,42 +37,49 @@ optimizer = torch.optim.AdamW([
 ])
 
 llm.model.train()
-# for step in range(200):
-    # print(step)
-for batch_num, batch in enumerate(loader):
-    print(batch_num)
-    features = batch["features"].to(device).float()
-    captions = batch["caption"]
 
-    B = features.shape[0]
-    P = prompt_ids.shape[1]
+print(f"{'epoch':>6} | {'batch':>6} | {'mlp loss':>9} | {'mimir loss':>10}")
+print("-" * 42)
 
-    eos = llm.tokenizer.eos_token # <turn|>
+for e in range(c.epochs):
+    for batch_num, batch in enumerate(loader):
+        print(batch_num)
+        features = batch["features"].to(device).float()
+        captions = batch["caption"]
 
-    tok = llm.tokenizer(
-        [cap + eos for cap in captions],
-        add_special_tokens=False, padding=True, padding_side="right", return_tensors="pt").to(device)
+        B = features.shape[0]
+        P = prompt_ids.shape[1]
 
-    caption_ids = tok.input_ids
-    caption_mask = tok.attention_mask
-                    
-    ids = torch.cat([prompt_ids.expand(B, -1), caption_ids], dim=1) # copy prompt B times
-    text = llm.embedding(ids)
-    image = mlp(features).to(text.dtype)
-    inputs = torch.cat([image, text], dim=1)
+        eos = llm.tokenizer.eos_token # <turn|>
 
-    prefix = 256 + P
-    attention_mask = torch.cat([torch.ones(B, prefix, dtype=torch.long, device=device), caption_mask], dim=1)
+        tok = llm.tokenizer(
+            [cap + eos for cap in captions],
+            add_special_tokens=False, padding=True, padding_side="right", return_tensors="pt").to(device)
 
-    labels = caption_ids.masked_fill(caption_mask == 0, -100) # ignore gradients for non-captions
-    labels = torch.cat([torch.full((B,prefix), -100, device=device), labels], dim=1)
+        caption_ids = tok.input_ids
+        caption_mask = tok.attention_mask
+                        
+        ids = torch.cat([prompt_ids.expand(B, -1), caption_ids], dim=1) # copy prompt B times
+        text = llm.embedding(ids)
+        image = mlp(features).to(text.dtype)
+        inputs = torch.cat([image, text], dim=1)
 
-    # Mimir loss
-    token_type_ids = torch.zeros_like(attention_mask)
-    token_type_ids[:, :prefix] = 1
+        prefix = 256 + P
+        attention_mask = torch.cat([torch.ones(B, prefix, dtype=torch.long, device=device), caption_mask], dim=1)
 
-    loss = llm.model(inputs_embeds=inputs, attention_mask=attention_mask, labels=labels, token_type_ids=token_type_ids).loss
-    loss.backward()
-    optimizer.step()
-    optimizer.zero_grad()
-    print(loss.item())
+        labels = caption_ids.masked_fill(caption_mask == 0, -100) # ignore gradients for non-captions
+        labels = torch.cat([torch.full((B,prefix), -100, device=device), labels], dim=1)
+
+        # Mimir loss
+        token_type_ids = torch.zeros_like(attention_mask)
+        token_type_ids[:, :prefix] = 1
+
+        mlp_loss = mlp.model(inputs_embeds=inputs, attention_mask=attention_mask, labels=labels, token_type_ids=token_type_ids).loss
+        mimir_loss = llm.model(inputs_embeds=inputs, attention_mask=attention_mask, labels=labels, token_type_ids=token_type_ids).loss
+        mlp_loss.backward()
+        mimir_loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+        print(f"{e+1:>6} | {batch_num+1:>6} | {mlp_loss.item():>9.4f} | {mimir_loss.item():>10.4f}")
+
+
