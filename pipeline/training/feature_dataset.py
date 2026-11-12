@@ -40,6 +40,6 @@ class FeatureDataset(Dataset):
             features_len = np.load(path, mmap_mode="r").shape[0]
             if features_len != len(captions):
                 raise ValueError(f"{path.name}")
-            self.captions.append[captions]
+            self.captions.append(captions)
             self.offsets.append(self.total)
             self.total =+ len(captions)
