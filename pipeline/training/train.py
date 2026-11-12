@@ -98,7 +98,7 @@ for e in range(c.epochs):
               "What ethnic race is this man?"]
 
     with torch.no_grad():
-        img = Image.open(image_path).convert("RBG")
+        img = Image.open(image_path).convert("RGB")
         features = vm.embed(img)
         img_emb = mlp(features.float())
 
