@@ -41,10 +41,9 @@ llm.model.train()
 print(f"{'epoch':>6} | {'batch':>6} | {'loss':>8}")
 print("-" * 26)
 
-
 for e in range(c.epochs):
     for batch_num, batch in enumerate(loader):
-        print(batch_num)
+
         features = batch["features"].to(device).float()
         captions = batch["caption"]
 
