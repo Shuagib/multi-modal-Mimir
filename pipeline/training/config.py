@@ -25,7 +25,7 @@ class ProjectorTrainConfig:
     # by sqrt(hidden_size) internally, so the projector must emit raw-table scale.
     target_rms: float = 0.009060
 
-    batch_size: int = 16
+    batch_size: int = 4
     learning_rate: float = 1e-3
     num_epochs: int = 20
 
