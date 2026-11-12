@@ -35,7 +35,7 @@ class FeatureDataset(Dataset):
 
     def init_feature_files(self) -> list:
         for path in self.feature_files:
-            jsonl = path.parent / path.name.replace("features-", "captions").replace(".npy", ".jsonl")
+            jsonl = path.parent / path.name.replace("features-", "caption-").replace(".npy", ".jsonl")
             captions = [json.loads(line)["caption"] for line in jsonl.open()]
             features_len = np.load(path, mmap_mode="r").shape[0]
             if features_len != len(captions):

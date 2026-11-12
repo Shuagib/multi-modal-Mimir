@@ -1,7 +1,7 @@
 import logging
 import torch
 from torch.utils.data import DataLoader
-from transformers import get_constant_schedule_with_warmup
+# from transformers import get_constant_schedule_with_warmup
 
 from language_model.model import Mimir
 from projector.model import MLP
@@ -10,8 +10,6 @@ from pipeline.training.feature_dataset import FeatureDataset
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("train")
-
-NUM_PATCHES = 256
 
 c = ProjectorTrainConfig()
 device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
@@ -25,6 +23,7 @@ loader = DataLoader(train_data, batch_size=c.batch_size, shuffle=True)
 prompt_ids = llm.tokenizer.apply_chat_template(
     [{"role": "user", "content": c.instruction}],
      add_generation_prompt=True, return_tensors="pt")["input_ids"].to(device)
+
 
 optimizer = torch.optim.AdamW([
     {"params": mlp.parameters(),       "lr": 1e-4},
