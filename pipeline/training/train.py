@@ -111,7 +111,7 @@ with torch.no_grad():
     inputs = torch.cat([img_emb.to(txt_emb.dtype), txt_emb], dim=1)
 
 print("\nprompt: ", prompt)
-print("generated:", llm.generate_and_decode(inputs, max_new_tokens=100))
+print("generated:", llm.generate_and_decode(inputs, max_new_tokens=300))
 
 
     # for batch in eval_data:
