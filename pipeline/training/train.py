@@ -38,8 +38,9 @@ optimizer = torch.optim.AdamW([
 
 llm.model.train()
 
-print(f"{'epoch':>6} | {'batch':>6} | {'mlp loss':>9} | {'mimir loss':>10}")
-print("-" * 42)
+print(f"{'epoch':>6} | {'batch':>6} | {'loss':>8}")
+print("-" * 26)
+
 
 for e in range(c.epochs):
     for batch_num, batch in enumerate(loader):
@@ -74,12 +75,12 @@ for e in range(c.epochs):
         token_type_ids = torch.zeros_like(attention_mask)
         token_type_ids[:, :prefix] = 1
 
-        mlp_loss = mlp.model(inputs_embeds=inputs, attention_mask=attention_mask, labels=labels, token_type_ids=token_type_ids).loss
+        # mlp_loss = mlp.model(inputs_embeds=inputs, attention_mask=attention_mask, labels=labels, token_type_ids=token_type_ids).loss
         mimir_loss = llm.model(inputs_embeds=inputs, attention_mask=attention_mask, labels=labels, token_type_ids=token_type_ids).loss
-        mlp_loss.backward()
+        # mlp_loss.backward()
         mimir_loss.backward()
         optimizer.step()
         optimizer.zero_grad()
-        print(f"{e+1:>6} | {batch_num+1:>6} | {mlp_loss.item():>9.4f} | {mimir_loss.item():>10.4f}")
+        print(f"{e+1:>6} | {batch_num+1:>6} | {mimir_loss.item():>8.4f}")
 
 
