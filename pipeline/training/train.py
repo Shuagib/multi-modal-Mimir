@@ -24,7 +24,7 @@ train_data = FeatureDataset(c.train_dir)
 eval_data = FeatureDataset(c.eval_dir)
 
 def loader(data):
-    DataLoader(data, batch_size=c.batch_size, shuffle=True)
+    return DataLoader(data, batch_size=c.batch_size, shuffle=True)
 
 train_load = loader(train_data) 
 eval_load = loader(eval_data)
@@ -87,18 +87,22 @@ for e in range(c.epochs):
 
     llm.model.eval()
     mlp.eval()
-    for batch in eval_load:
+    for i, batch in enumerate(eval_load):
+        if i >= 3:  # only show a few samples per epoch
+            break
         with torch.no_grad():
-            features = batch["features".unsquezze].to(device).float()
+            features = batch["features"][:1].to(device).float()  # first sample only
             img = mlp(features)
             txt = llm.embedding(prompt_ids)
-            inputs = torch.cat(img.to(txt.dtype), txt)
+            inputs = torch.cat([img.to(txt.dtype), txt], dim=1)
+            generated = llm.generate_and_decode(inputs, max_new_tokens=100)
 
-        generated = llm.generate_and_decode(inputs, max_new_tokens=100)
-
-        print("\n--- eval sample 0 ---")
-        print("real:     ", batch["caption"])
+        print(f"\n--- eval sample {i} ---")
+        print("real:     ", batch["caption"][0])
         print("generated:", generated)
+
+    llm.model.train()
+    mlp.train()
 
     
 
