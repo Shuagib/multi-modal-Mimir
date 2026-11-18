@@ -1,7 +1,8 @@
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
-class Mimir():
+
+class Mimir:
     def __init__(self, model_name: str, device: str):
         self.model, self.tokenizer = self.load_model_Mimir(name=model_name, device=device)
         self.embedding = self.model.get_input_embeddings() 

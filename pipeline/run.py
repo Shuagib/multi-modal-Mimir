@@ -4,7 +4,7 @@ from PIL import Image
 
 from vision_model.model import SigLIP2
 from projector.model import MLP
-from language_model.model import Mimir
+from language_model.mimir import Mimir
 from pipeline.utils.image_injection import (insert_special_tokens, inject_patches)
 
 IMAGE_DIR = Path(__file__).resolve().parent.parent / "test_images"

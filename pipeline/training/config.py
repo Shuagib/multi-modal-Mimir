@@ -21,8 +21,7 @@ class ProjectorTrainConfig:
     mlp_in_dim: int = 768
     mlp_hidden_dim: int = 2048
     mlp_out_dim: int = 1536
-    # Measured std of Mimir's input embedding table. The LM multiplies inputs_embeds
-    # by sqrt(hidden_size) internally, so the projector must emit raw-table scale.
+  
     target_rms: float = 0.009060
     epochs = 10
 
