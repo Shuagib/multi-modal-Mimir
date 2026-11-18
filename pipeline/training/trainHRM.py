@@ -53,8 +53,6 @@ for e in range(c.epochs):
 
         features = batch["features"].to(device).float()
         captions = batch["caption"]
-        print(features[0])
-        print(captions[0])
 
         B = features.shape[0]
         P = prompt_ids.shape[1]
@@ -91,20 +89,43 @@ for e in range(c.epochs):
         optimizer.zero_grad()
         print(f"{e+1:>6} | {batch_num+1:>6} | {loss.item():>8.4f}")
 
+
     llm.model.eval()
     mlp.eval()
-    for batch in eval_load:
+    for i, batch in enumerate(eval_load):
+        if i >= 3:  # only show a few samples per epoch
+            break
         with torch.no_grad():
-            features = batch["features".unsqueeze].to(device).float()
+            features = batch["features"][:1].to(device).float()  # first sample only
             img = mlp(features)
             txt = llm.embedding(prompt_ids)
-            inputs = torch.cat(img.to(txt.dtype), txt)
+            inputs = torch.cat([img.to(txt.dtype), txt], dim=1)
+            generated = llm.generate_and_decode(inputs, max_new_tokens=100)
+
+        #print(f"\n--- eval sample {i} ---")
+        #print("real:     ", batch["caption"][0])
+        #print("generated:", generated)
+
+    llm.model.train()
+    mlp.train()
+
+
+
+    """
+    for batch in eval_load:
+        with torch.no_grad():
+            features = batch["features"][:1].to(device).float()  # first sample only
+            img = mlp(features)
+            txt = llm.embedding(prompt_ids)
+            inputs = torch.cat([img.to(txt.dtype), txt], dim=1)
+            generated = llm.generate_and_decode(inputs, max_new_tokens=100)
 
         generated = llm.generate_and_decode(inputs, max_new_tokens=100)
 
         print("\n--- eval sample 0 ---")
         print("real:     ", batch["caption"])
         print("generated:", generated)
+        """
 
     
 
