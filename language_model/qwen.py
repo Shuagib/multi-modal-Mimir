@@ -45,4 +45,4 @@ class Qwen():
 name = "Qwen/Qwen2.5-1.5B-Instruct"
 print(AutoConfig.from_pretrained(name).hidden_size)
 m = AutoModelForCausalLM.from_pretrained(name)
-print(m.get_input_embeddings().weight.std())  # new target_rms
+print(m.get_input_embeddings().weight.std())  
