@@ -11,7 +11,7 @@ from pipeline.training.config import ProjectorTrainConfig
 from pipeline.training.feature_dataset import FeatureDataset
 from projector.two_layer_mlp import MLP
 
-# from vision_model.model import SigLIP2
+from vision_model.model import SigLIP2
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("train")
@@ -26,7 +26,7 @@ train_data = FeatureDataset(c.train_dir)
 eval_data = FeatureDataset(c.eval_dir)
 
 def loader(data):
-    return DataLoader(data, batch_size=c.batch_size, shuffle=True)
+   return DataLoader(data, batch_size=c.batch_size, shuffle=True)
 
 train_load = loader(train_data) 
 eval_load = loader(eval_data)
