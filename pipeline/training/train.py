@@ -1,18 +1,15 @@
 import logging
+
 import torch
-from pathlib import Path
-from PIL import Image
-
 from torch.utils.data import DataLoader
+
 # from transformers import get_constant_schedule_with_warmup
-
-
-
-from language_model.model import Mimir
-from projector.model import MLP
-from vision_model.model import SigLIP2
+from language_model.mimir import Mimir
 from pipeline.training.config import ProjectorTrainConfig
 from pipeline.training.feature_dataset import FeatureDataset
+from projector.two_layer_mlp import MLP
+
+# from vision_model.model import SigLIP2
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("train")
@@ -24,9 +21,13 @@ mlp = MLP(c.mlp_in_dim, c.mlp_hidden_dim, c.mlp_out_dim, c.target_rms).to(device
 llm = Mimir(model_name=c.llm_model_name, device=device)
 
 train_data = FeatureDataset(c.train_dir)
-# train_data = Subset(FeatureDataset(c.train_dir), [0])   # only sample 0
+eval_data = FeatureDataset(c.eval_dir)
 
-loader = DataLoader(train_data, batch_size=c.batch_size, shuffle=True)
+def loader(data):
+    DataLoader(data, batch_size=c.batch_size, shuffle=True)
+
+train_load = loader(train_data) 
+eval_load = loader(eval_data)
 
 prompt_ids = llm.tokenizer.apply_chat_template(
     [{"role": "user", "content": c.instruction}],
@@ -44,7 +45,7 @@ print(f"{'epoch':>6} | {'batch':>6} | {'loss':>8}")
 print("-" * 26)
 
 for e in range(c.epochs):
-    for batch_num, batch in enumerate(loader):
+    for batch_num, batch in enumerate(train_load):
 
         features = batch["features"].to(device).float()
         captions = batch["caption"]
@@ -86,33 +87,45 @@ for e in range(c.epochs):
 
     llm.model.eval()
     mlp.eval()
+    for batch in eval_load:
+        with torch.no_grad():
+            features = batch["features".unsquezze].to(device).float()
+            img = mlp(features)
+            txt = llm.embedding(prompt_ids)
+            inputs = torch.cat(img.to(txt.dtype), txt)
 
-# eval_data = FeatureDataset(c.train_dir)
+        generated = llm.generate_and_decode(inputs, max_new_tokens=100)
 
-vm = SigLIP2(model_name=c.vision_model_name, device=device)
+        print("\n--- eval sample 0 ---")
+        print("real:     ", batch["caption"])
+        print("generated:", generated)
 
-image_path = Path("test_images/shuggibuggidubbi.png")
-prompt = ["Describe the man in the image",
-            "How many eyes doe this paricular man have",
-            "Does this man look kappy or sad?",
-            "What ethnic race is this man?"]
-
-with torch.no_grad():
-    img = Image.open(image_path).convert("RGB")
-    features = vm.embed(img)
-    img_emb = mlp(features.float())
-
-    prompt_ids = llm.tokenizer.apply_chat_template(
-        [{"role": "user", "content": prompt[3]}],
-        add_generation_prompt=True, return_tensors="pt")["input_ids"].to(device)
-    txt_emb = llm.embedding(prompt_ids)
+    
 
 
-    inputs = torch.cat([img_emb.to(txt_emb.dtype), txt_emb], dim=1)
+    
 
-print("\nprompt: ", prompt)
-print("generated:", llm.generate_and_decode(inputs, max_new_tokens=300))
+# vm = SigLIP2(model_name=c.vision_model_name, device=device)
+
+# image_path = Path("test_images/shuggibuggidubbi.png")
+# prompt = ["Describe the man in the image",
+#             "How many eyes doe this paricular man have",
+#             "Does this man look kappy or sad?",
+#             "What ethnic race is this man?"]
+
+# with torch.no_grad():
+#     img = Image.open(image_path).convert("RGB")
+#     features = vm.embed(img)
+#     img_emb = mlp(features.float())
+
+#     prompt_ids = llm.tokenizer.apply_chat_template(
+#         [{"role": "user", "content": prompt[3]}],
+#         add_generation_prompt=True, return_tensors="pt")["input_ids"].to(device)
+#     txt_emb = llm.embedding(prompt_ids)
 
 
-    # for batch in eval_data:
-        # features = batch["features"].unsqueeze(0).to(device).float()   # (1, 256, 768)
+#     inputs = torch.cat([img_emb.to(txt_emb.dtype), txt_emb], dim=1)
+
+# print("\nprompt: ", prompt)
+# print("generated:", llm.generate_and_decode(inputs, max_new_tokens=300))
+

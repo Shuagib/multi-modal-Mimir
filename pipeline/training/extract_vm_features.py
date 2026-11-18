@@ -38,14 +38,13 @@ def _cap(row:dict) -> tuple[str, str]:
     return "Describe the image", row["caption"]
 
 def _count(row: dict) -> tuple[str, str]:
-    return f"Hor many {row['label']} are there in the image", str(row("count"))
+    return f"How many {row['label']} are there in the image", str(row("count"))
 
 def _cap_qa(row: dict) -> tuple[str, str]:
     return f"Hor many {row['label']} are there in the image", str(row("count"))
 
 SOURCES = {
-    "pixmo-cap":    Source("allenai/pixmo-cap",    "tr" \
-    "ain", "image_url", _cap),
+    "pixmo-cap":    Source("allenai/pixmo-cap",    "train", "image_url", _cap),
     "pixmo-count":  Source("allenai/pixmo-count",  "train", "image_url", _count),
     "pixmo-cap-qa": Source("allenai/pixmo-cap-qa", "train", "image_url", _cap_qa),
 }
@@ -102,8 +101,7 @@ class ShardWriter:
         np.save(self.out_dir / f"features-{feature_stem}.npy",
             np.stack([s.image for s in self.buffer]))
         with open(self.out_dir / f"caption-{feature_stem}.jsonl", "w") as fh:
-            for s in self.buffer:
-                fh.write(json.dumps({"caption": s.caption, "image_url": s.url}) + "\n")
+            fh.writelines(json.dumps({"caption": s.caption, "image_url": s.url}) + "\n" for s in self.buffer)
 
         log.info("%s shard %s: %d samples", self.pipeline_mode, feature_stem, len(self.buffer))
         self.buffer = []
