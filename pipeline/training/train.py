@@ -11,7 +11,7 @@ from pipeline.training.config import ProjectorTrainConfig
 from pipeline.training.feature_dataset import FeatureDataset
 from projector.two_layer_mlp import MLP
 
-# from vision_model.model import SigLIP2
+from vision_model.model import SigLIP2
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("train")
@@ -89,22 +89,52 @@ for e in range(c.epochs):
 
     llm.model.eval()
     mlp.eval()
-    for i, batch in enumerate(eval_load):
-        if i >= 3:  # only show a few samples per epoch
-            break
-        with torch.no_grad():
-            features = batch["features"][:1].to(device).float()  # first sample only
-            img = mlp(features)
-            txt = llm.embedding(prompt_ids)
-            inputs = torch.cat([img.to(txt.dtype), txt], dim=1)
-            generated = llm.generate_and_decode(inputs, max_new_tokens=100)
+    val_total = 0.0
+    with torch.no_grad():
+        for batch in eval_load:
+            features = batch["features"].to(device).float()
+            captions = batch["caption"]
+            B = features.shape[0]
 
-        #print(f"\n--- eval sample {i} ---")
-        #print("real:     ", batch["caption"][0])
-        #print("generated:", generated)
+            tok = llm.tokenizer([cap + eos for cap in captions],
+                add_special_tokens=False, padding=True, padding_side="right", return_tensors="pt").to(device)
+
+            ids = torch.cat([prompt_ids.expand(B, -1), tok.input_ids], dim=1)
+            text = llm.embedding(ids)
+            inputs = torch.cat([mlp(features).to(text.dtype), text], dim=1)
+
+            attention_mask = torch.cat([torch.ones(B, prefix, dtype=torch.long, device=device), tok.attention_mask], dim=1)
+            labels = tok.input_ids.masked_fill(tok.attention_mask == 0, -100)
+            labels = torch.cat([torch.full((B, prefix), -100, device=device), labels], dim=1)
+            token_type_ids = torch.zeros_like(attention_mask)
+            token_type_ids[:, :prefix] = 1
+
+            val_total += llm.model(inputs_embeds=inputs, attention_mask=attention_mask,
+                                   labels=labels, token_type_ids=token_type_ids).loss.item()
+
+    print(f"=== epoch {e+1} | val loss {val_total / len(eval_load):.4f} ===")
 
     llm.model.train()
     mlp.train()
+    
+    # llm.model.eval()
+    # mlp.eval()
+    # for i, batch in enumerate(eval_load):
+    #     if i >= 3:  # only show a few samples per epoch
+    #         break
+    #     with torch.no_grad():
+    #         features = batch["features"][:1].to(device).float()  # first sample only
+    #         img = mlp(features)
+    #         txt = llm.embedding(prompt_ids)
+    #         inputs = torch.cat([img.to(txt.dtype), txt], dim=1)
+    #         generated = llm.generate_and_decode(inputs, max_new_tokens=100)
+
+    #     #print(f"\n--- eval sample {i} ---")
+    #     #print("real:     ", batch["caption"][0])
+    #     #print("generated:", generated)
+
+    # llm.model.train()
+    # mlp.train()
 
     
 
