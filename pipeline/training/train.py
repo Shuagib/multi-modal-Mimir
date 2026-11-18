@@ -97,9 +97,9 @@ for e in range(c.epochs):
             inputs = torch.cat([img.to(txt.dtype), txt], dim=1)
             generated = llm.generate_and_decode(inputs, max_new_tokens=100)
 
-        print(f"\n--- eval sample {i} ---")
-        print("real:     ", batch["caption"][0])
-        print("generated:", generated)
+        #print(f"\n--- eval sample {i} ---")
+        #print("real:     ", batch["caption"][0])
+        #print("generated:", generated)
 
     llm.model.train()
     mlp.train()
@@ -109,27 +109,27 @@ for e in range(c.epochs):
 
     
 
-# vm = SigLIP2(model_name=c.vision_model_name, device=device)
+vm = SigLIP2(model_name=c.vision_model_name, device=device)
 
-# image_path = Path("test_images/shuggibuggidubbi.png")
-# prompt = ["Describe the man in the image",
-#             "How many eyes doe this paricular man have",
-#             "Does this man look kappy or sad?",
-#             "What ethnic race is this man?"]
+image_path = Path("test_images/shuggibuggidubbi.png")
+prompt = ["Describe the man in the image",
+            "How many eyes doe this paricular man have",
+            "Does this man look kappy or sad?",
+            "What ethnic race is this man?"]
 
-# with torch.no_grad():
-#     img = Image.open(image_path).convert("RGB")
-#     features = vm.embed(img)
-#     img_emb = mlp(features.float())
+with torch.no_grad():
+    img = Image.open(image_path).convert("RGB")
+    features = vm.embed(img)
+    img_emb = mlp(features.float())
 
-#     prompt_ids = llm.tokenizer.apply_chat_template(
-#         [{"role": "user", "content": prompt[3]}],
-#         add_generation_prompt=True, return_tensors="pt")["input_ids"].to(device)
-#     txt_emb = llm.embedding(prompt_ids)
+    prompt_ids = llm.tokenizer.apply_chat_template(
+        [{"role": "user", "content": prompt[3]}],
+        add_generation_prompt=True, return_tensors="pt")["input_ids"].to(device)
+    txt_emb = llm.embedding(prompt_ids)
 
 
-#     inputs = torch.cat([img_emb.to(txt_emb.dtype), txt_emb], dim=1)
+    inputs = torch.cat([img_emb.to(txt_emb.dtype), txt_emb], dim=1)
 
-# print("\nprompt: ", prompt)
-# print("generated:", llm.generate_and_decode(inputs, max_new_tokens=300))
+print("\nprompt: ", prompt)
+print("generated:", llm.generate_and_decode(inputs, max_new_tokens=300))
 
