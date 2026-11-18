@@ -26,7 +26,7 @@ train_data = FeatureDataset(c.train_dir)
 eval_data = FeatureDataset(c.eval_dir)
 
 def loader(data):
-    return DataLoader(data, batch_size=c.batch_size, shuffle=True)
+   return DataLoader(data, batch_size=c.batch_size, shuffle=True)
 
 train_load = loader(train_data) 
 eval_load = loader(eval_data)

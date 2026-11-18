@@ -2,7 +2,7 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 CONDITION = "<|quad_end|><|object_ref_end|>"
 
-class HRM_Text():
+class HRMText():
     def __init__(self, model_name: str, device: str):
         self.model, self.tokenizer = self.load_model_HRM_Text(name=model_name, device=device)
         self.embedding = self.model.get_input_embeddings() 

@@ -33,3 +33,33 @@ class ProjectorTrainConfig:
     checkpoint_dir: Path = PROJECT_ROOT / "checkpoints" / "projector"
     train_dir: Path = PROJECT_ROOT / "data" / "train"
     eval_dir: Path = PROJECT_ROOT / "data" / "eval"
+
+
+@dataclass(frozen=True)
+class ProjectorTrainConfigHRM:
+    """Stage-1 config: train the projector only, with vision encoder and LM frozen."""
+
+    vision_model_name: str = "google/siglip2-base-patch16-256"
+    llm_model_name: str = "sapientinc/HRM-Text-1B"
+
+    dataset_name: str = "allenai/pixmo-cap"
+    dataset_split: str = "train"
+    max_samples: int | None = 20_000
+
+    instruction: str = "Describe the image."
+
+    mlp_in_dim: int = 768
+    mlp_hidden_dim: int = 2048
+    mlp_out_dim: int = 1536
+  
+    target_rms: float = 0.009060
+    epochs = 10
+
+    batch_size: int = 4
+    learning_rate: float = 1e-3
+    num_epochs: int = 20
+
+    image_cache_dir: Path = PROJECT_ROOT / "data" / "image_cache"
+    checkpoint_dir: Path = PROJECT_ROOT / "checkpoints" / "projector"
+    train_dir: Path = PROJECT_ROOT / "data" / "train"
+    eval_dir: Path = PROJECT_ROOT / "data" / "eval"
