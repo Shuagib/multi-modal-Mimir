@@ -138,8 +138,8 @@ for e in range(c.epochs):
 
 vm = SigLIP2(model_name=c.vision_model_name, device=device)
 
-llm.model.train()
-mlp.train()
+llm.model.eval()
+mlp.eval()
 
 image_path = Path("test_images/shuggibuggidubbi.png")
 prompt = ["Describe the man in the image",
