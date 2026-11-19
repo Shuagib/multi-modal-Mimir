@@ -25,14 +25,12 @@ class Qwen():
     
     def generate_and_decode(self,input_embeddings: torch.Tensor, max_new_tokens: int = 256) -> str:
         attention_mask = torch.ones(input_embeddings.shape[0:2], dtype= torch.long,device =self.model.device)
-        token_type_ids = torch.ones_like(attention_mask)
-        print(f"attention_mask : {attention_mask.shape}, \n token_type_ids {token_type_ids.shape}")
+        #print(f"attention_mask : {attention_mask.shape}, \n token_type_ids {token_type_ids.shape}")
 
         with torch.no_grad():
             outputs = self.model.generate(
                 inputs_embeds = input_embeddings,
                 attention_mask = attention_mask,
-                token_type_ids = token_type_ids,
                 max_new_tokens = max_new_tokens)
             text = self.tokenizer.decode(outputs[0], skip_special_tokens = True)
             return text
@@ -41,8 +39,10 @@ class Qwen():
 
 
 
-
-name = "Qwen/Qwen2.5-1.5B-Instruct"
-print(AutoConfig.from_pretrained(name).hidden_size)
-m = AutoModelForCausalLM.from_pretrained(name)
-print(m.get_input_embeddings().weight.std())  
+#Print Hidden dimension output and target weigths normalized
+# name = "Qwen/Qwen2.5-1.5B-Instruct"
+# print(AutoConfig.from_pretrained(name).hidden_size)
+# m = AutoModelForCausalLM.from_pretrained(name)
+# w = m.get_input_embeddings().weight.detach().float()
+# target_rms = torch.sqrt(torch.mean(w**2)).item()
+# print(f"target_rms: {target_rms:.6f}")
