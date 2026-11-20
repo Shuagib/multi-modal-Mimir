@@ -33,6 +33,8 @@ eval_load = loader(eval_data)
 # import inspect
 # print("token_type_ids" in inspect.signature(llm.model.forward).parameters)
 
+print(f"running {c.epochs} epocs")
+
 def build_batch(prompts, captions, features):
     B = features.shape[0]
     seqs, label_seqs = [], []
