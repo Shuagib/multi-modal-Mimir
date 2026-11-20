@@ -38,7 +38,7 @@ def _cap(row:dict) -> tuple[str, str]:
     return "Describe the image", row["caption"]
 
 def _count(row: dict) -> tuple[str, str]:
-    return f"How many {row['label']} are there in the image", str(row("count"))
+    return f"How many {row['label']} are there in the image", str(row["count"])
 
 def _cap_qa(row: dict) -> tuple[str, str]:
     question = row["question"].replace("[USER]", "").replace("[ASSISTANT]", "").strip()
