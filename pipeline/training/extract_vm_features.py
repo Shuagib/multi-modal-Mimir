@@ -148,8 +148,7 @@ def extract_source(name, src, args, vm, device, pool, train_writer, eval_writer,
                 break
         if kept >= local_train_n:
             break
-        if seen % 100 == 0:
-            log.info("seen %d, kept %d (%.0f%% ok)", seen, kept, 100 * kept / seen)
+        log.info("seen %d, kept %d (%.0f%% ok)", seen, kept, 100 * kept / seen)
 
 def main() -> None:
     ap = argparse.ArgumentParser()
