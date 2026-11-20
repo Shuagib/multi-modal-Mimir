@@ -143,7 +143,7 @@ for e in range(c.epochs):
 vm = SigLIP2(model_name=c.vision_model_name, device=device)
 
 # image_path = Path("test_images/shuggibuggidubbi.png")
-image_path = Path("test_images/annemette.png")
+image_path = Path("test_images/annemette.jpeg")
 prompt = ["Rate this woman on 1-10 on attractivenes, hotness and sexyness",
             #"How many eyes doss this paricular man have",
             #"Does this man look kappy or sad?",
