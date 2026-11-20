@@ -42,8 +42,9 @@ optimizer = torch.optim.AdamW([
 
 llm.model.train()
 
-print(f"{'epoch':>6} | {'batch':>6} | {'loss':>8}")
-print("-" * 26)
+header = f"{'epoch':>6} │ {'batch':>6} │ {'loss':>8}"
+print(header)
+print("─" * len(header))
 
 for e in range(c.epochs):
     for batch_num, batch in enumerate(train_load):
@@ -111,7 +112,10 @@ for e in range(c.epochs):
             val_total += llm.model(inputs_embeds=inputs, attention_mask=attention_mask,
                                    labels=labels, token_type_ids=token_type_ids).loss.item()
 
-    print(f"=== epoch {e+1} | val loss {val_total / len(eval_load):.4f} ===")
+    print("─" * len(header))
+    print(f"epoch {e+1}/{c.epochs} │ val loss {val_total / len(eval_load):.4f}")
+    print("─" * len(header))
+
 
     llm.model.train()
     mlp.train()
@@ -145,9 +149,9 @@ vm = SigLIP2(model_name=c.vision_model_name, device=device)
 # image_path = Path("test_images/shuggibuggidubbi.png")
 image_path = Path("test_images/annemette.jpeg")
 prompt = ["Rate this woman on 1-10 on attractivenes, hotness and sexyness",
-            #"How many eyes doss this paricular man have",
-            #"Does this man look kappy or sad?",
-            #"What ethnic race is this man?"
+            "How many eyes doss this paricular man have",
+            "Does this man look kappy or sad?",
+            "What ethnic race is this man?"
             ]
 
 with torch.no_grad():
@@ -156,13 +160,13 @@ with torch.no_grad():
     img_emb = mlp(features.float())
 
     prompt_ids = llm.tokenizer.apply_chat_template(
-        [{"role": "user", "content": prompt[3]}],
+        [{"role": "user", "content": prompt[0]}],
         add_generation_prompt=True, return_tensors="pt")["input_ids"].to(device)
     txt_emb = llm.embedding(prompt_ids)
 
 
     inputs = torch.cat([img_emb.to(txt_emb.dtype), txt_emb], dim=1)
 
-print("\nprompt: ", prompt)
-print("generated:", llm.generate_and_decode(inputs, max_new_tokens=300))
+print(f"\n{'prompt:':<11}{prompt}")
+print(f"{'generated:':<11}{llm.generate_and_decode(inputs, max_new_tokens=300)}")
 
