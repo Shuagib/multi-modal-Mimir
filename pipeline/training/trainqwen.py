@@ -1,13 +1,10 @@
 import logging
 from pathlib import Path
-<<<<<<< HEAD
-=======
 from PIL import Image
 import matplotlib
 matplotlib.use("Agg")  # There is no screen in Ucloud therefore we need this tihi
 import matplotlib.pyplot as plt
 
->>>>>>> 99d7a28952f98138530a2a62e2b3625d6126423a
 
 import torch
 from PIL import Image
