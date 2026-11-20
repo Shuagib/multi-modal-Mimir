@@ -1,5 +1,6 @@
 import torch
 
+
 def inject_patches(image_embeds: torch.Tensor, prompt_embeds: torch.Tensor) -> torch.Tenor:
     image_embeds = image_embeds.to(device=prompt_embeds.device, dtype=prompt_embeds.dtype)
     concat = torch.cat([image_embeds, prompt_embeds], dim=1)

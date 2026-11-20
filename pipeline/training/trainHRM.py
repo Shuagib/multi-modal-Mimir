@@ -4,12 +4,10 @@ import torch
 from torch.utils.data import DataLoader
 
 # from transformers import get_constant_schedule_with_warmup
-from language_model.modelHRM import HRMText, CONDITION
+from language_model.modelHRM import CONDITION, HRMText
 from pipeline.training.config import ProjectorTrainConfigHRM
 from pipeline.training.feature_dataset import FeatureDataset
 from projector.two_layer_mlp import MLP
-
-from vision_model.model import SigLIP2
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("train")

@@ -30,9 +30,37 @@ def loader(data):
 train_load = loader(train_data) 
 eval_load = loader(eval_data)
 
-prompt_ids = llm.tokenizer.apply_chat_template(
-    [{"role": "user", "content": c.instruction}],
-     add_generation_prompt=True, return_tensors="pt")["input_ids"].to(device)
+
+def build_batch(prompts, captions, features):
+    B = features.shape[0]
+    seqs, label_seqs = [], []
+    for p, cap in zip(prompts, captions):
+        p_ids = llm.tokenizer.apply_chat_template(
+                    [{"role": "user", "content": p}],
+                    add_generation_prompt=True, return_tensors="pt")["input_ids"]
+        c_ids = llm.tokenizer(cap + llm.tokenizer.eos_token, add_special_tokens=False).input_ids
+        seqs.append(p_ids + c_ids)
+        label_seqs.append([-100] * len(p_ids) + c_ids)
+
+    L = max(map(len,seqs))
+    pad = llm.tokenizer.pad_token_id
+    ids = torch.tensor([s * [pad] * (L - len(s)) for s in seqs])
+    text_mask = torch.tensor([[1] * len(s) + [0] * (L - len(s)) for s in seqs])
+    text_labels = torch.tensor([s + [-100] * (L - len(s)) for s in label_seqs])
+
+    text = llm.embedding(ids)
+    inputs = torch.cat([mlp(features).to(text.dtype), text], dim=1)
+    n_img = inputs.shape[1] - L
+    attention_mask = torch.cat([torch.ones(B, n_img, dtype=torch.long, device=device), caption_mask], dim=1)
+    labels = torch.cat([torch.full((B,n_img), -100, device=device), text_labels], dim=1)
+    
+    # mask for 
+    token_type_ids = torch.zeros_like(attention_mask)
+    token_type_ids[:, :n_img] = 1
+    import inspect
+    print("token_type_ids" in inspect.signature(llm.model.forward).parameters)
+    return inputs, attention_mask, labels, token_type_ids
+
 
 
 optimizer = torch.optim.AdamW([
@@ -46,41 +74,27 @@ header = f"{'epoch':>6} │ {'batch':>6} │ {'loss':>8}"
 print(header)
 print("─" * len(header))
 
+old_val = False
+
 for e in range(c.epochs):
     for batch_num, batch in enumerate(train_load):
 
         features = batch["features"].to(device).float()
         captions = batch["caption"]
 
-        B = features.shape[0]
-        P = prompt_ids.shape[1]
-
         eos = llm.tokenizer.eos_token # <turn|>
-
         tok = llm.tokenizer(
             [cap + eos for cap in captions],
             add_special_tokens=False, padding=True, padding_side="right", return_tensors="pt").to(device)
 
         caption_ids = tok.input_ids
-        caption_mask = tok.attention_mask
-                        
-        ids = torch.cat([prompt_ids.expand(B, -1), caption_ids], dim=1) # copy prompt B times
-        text = llm.embedding(ids)
-        image = mlp(features).to(text.dtype)
-        inputs = torch.cat([image, text], dim=1)
-
-        prefix = 256 + P
-        attention_mask = torch.cat([torch.ones(B, prefix, dtype=torch.long, device=device), caption_mask], dim=1)
-
-        labels = caption_ids.masked_fill(caption_mask == 0, -100) # ignore gradients for non-captions
-        labels = torch.cat([torch.full((B,prefix), -100, device=device), labels], dim=1)
-
+        caption_mask = tok.attention_mask        
         # Mimir loss
-        token_type_ids = torch.zeros_like(attention_mask)
-        token_type_ids[:, :prefix] = 1
+        features = batch["features"].to(device).float()
+        inputs, attention_mask, labels, token_type_ids = build_batch(batch["prompt"], batch["caption"], features)
+        mimir_loss = llm.model(inputs_embeds=inputs, attention_mask=attention_mask,
+                               labels=labels, token_type_ids=token_type_ids).loss
 
-        # mlp_loss = mlp.model(inputs_embeds=inputs, attention_mask=attention_mask, labels=labels, token_type_ids=token_type_ids).loss
-        mimir_loss = llm.model(inputs_embeds=inputs, attention_mask=attention_mask, labels=labels, token_type_ids=token_type_ids).loss
         # mlp_loss.backward()
         mimir_loss.backward()
         optimizer.step()
@@ -93,27 +107,19 @@ for e in range(c.epochs):
     with torch.no_grad():
         for batch in eval_load:
             features = batch["features"].to(device).float()
-            captions = batch["caption"]
-            B = features.shape[0]
-
-            tok = llm.tokenizer([cap + eos for cap in captions],
-                add_special_tokens=False, padding=True, padding_side="right", return_tensors="pt").to(device)
-
-            ids = torch.cat([prompt_ids.expand(B, -1), tok.input_ids], dim=1)
-            text = llm.embedding(ids)
-            inputs = torch.cat([mlp(features).to(text.dtype), text], dim=1)
-
-            attention_mask = torch.cat([torch.ones(B, prefix, dtype=torch.long, device=device), tok.attention_mask], dim=1)
-            labels = tok.input_ids.masked_fill(tok.attention_mask == 0, -100)
-            labels = torch.cat([torch.full((B, prefix), -100, device=device), labels], dim=1)
-            token_type_ids = torch.zeros_like(attention_mask)
-            token_type_ids[:, :prefix] = 1
+            inputs, attention_mask, labels, token_type_ids = build_batch(batch["prompt"], batch["caption"], features)
 
             val_total += llm.model(inputs_embeds=inputs, attention_mask=attention_mask,
                                    labels=labels, token_type_ids=token_type_ids).loss.item()
 
+    new_val = val_total / len(eval_load)
+
     print("─" * len(header))
-    print(f"epoch {e+1}/{c.epochs} │ val loss {val_total / len(eval_load):.4f}")
+    if old_val:
+        print(f"epoch {e+1}/{c.epochs} │ val loss {val_total / len(eval_load):.4f} │ val diff {old_val - new_val}")
+    else: 
+        print(f"epoch {e+1}/{c.epochs} │ val loss {val_total / len(eval_load):.4f}")
+    old_val = new_val
     print("─" * len(header))
 
 
@@ -164,9 +170,9 @@ with torch.no_grad():
         add_generation_prompt=True, return_tensors="pt")["input_ids"].to(device)
     txt_emb = llm.embedding(prompt_ids)
 
-
     inputs = torch.cat([img_emb.to(txt_emb.dtype), txt_emb], dim=1)
 
 print(f"\n{'prompt:':<11}{prompt}")
 print(f"{'generated:':<11}{llm.generate_and_decode(inputs, max_new_tokens=300)}")
+
 

@@ -41,7 +41,8 @@ def _count(row: dict) -> tuple[str, str]:
     return f"How many {row['label']} are there in the image", str(row("count"))
 
 def _cap_qa(row: dict) -> tuple[str, str]:
-    return f"Hor many {row['label']} are there in the image", str(row("count"))
+    question = row["question"].replace("[USER]", "").replace("[ASSISTANT]", "").strip()
+    return question, row["answer"]
 
 SOURCES = {
     "pixmo-cap":    Source("allenai/pixmo-cap",    "train", "image_url", _cap),
@@ -67,11 +68,13 @@ def fetch(url: str) -> Image.Image | None:
 
 class Sample(NamedTuple):
     image: Image.Image
+    prompt: str
     caption: str
     url: str
 
 class FeatureSample(NamedTuple):
     image: np.ndarray
+    prompt: str
     caption: str
     url: str
 
@@ -101,11 +104,52 @@ class ShardWriter:
         np.save(self.out_dir / f"features-{feature_stem}.npy",
             np.stack([s.image for s in self.buffer]))
         with open(self.out_dir / f"caption-{feature_stem}.jsonl", "w") as fh:
-            fh.writelines(json.dumps({"caption": s.caption, "image_url": s.url}) + "\n" for s in self.buffer)
+            fh.writelines(json.dumps({"prompt": s.prompt, "caption": s.caption, "image_url": s.url}) + "\n" for s in self.buffer)
 
         log.info("%s shard %s: %d samples", self.pipeline_mode, feature_stem, len(self.buffer))
         self.buffer = []
         self.current_shard_id += 1
+
+def extract_source(name, src, args, vm, device, pool, train_writer, eval_writer, images_dir):
+    from datasets import load_dataset
+    stream = load_dataset(src.hf_path, split=src.split, streaming=True)
+    kept, seen, batch_rows = 0, 0, []
+
+    k = len(args.sources)
+
+    local_train_n, local_eval_n = args.n // k, args.eval_n // k
+
+    for row in stream:
+        seen += 1
+        batch_rows.append(row)
+        if len(batch_rows) < args.batch_size:
+            continue
+
+        images = list(pool.map(lambda r: fetch(r["image_url"]), batch_rows)) # collect images
+        samples = [Sample(im, r["caption"], r["image_url"]) for im, r in zip(images, batch_rows) if im is not None] #add image-caption pair
+        
+        batch_rows = []
+        if not samples:
+            continue
+
+        px = vm.processor(images=[s.image for s in samples], return_tensors="pt").to(device)
+        with torch.no_grad():
+            output = vm.model(**px).last_hidden_state
+        output = output.cpu().numpy().astype(np.float16)
+
+        for feature, s in zip(output, samples):
+            writer = eval_writer if kept < local_eval_n else train_writer
+            if writer is eval_writer and args.save_eval_images:
+                s.image.save(images_dir / f"{name}-{kept:05d}.jpg", "JPEG", quality=92)
+            
+            writer.add(feature, s.caption, s.url) # append to buffer and flush if full
+            kept += 1
+            if kept >= local_train_n:
+                break
+        if kept >= local_train_n:
+            break
+        if seen % 2000 == 0:
+            log.info("seen %d, kept %d (%.0f%% ok)", seen, kept, 100 * kept / seen)
 
 def main() -> None:
     ap = argparse.ArgumentParser()
@@ -117,62 +161,37 @@ def main() -> None:
     ap.add_argument("--model", default="google/siglip2-base-patch16-256") # encoder model
     ap.add_argument("--eval-n", type=int, default=2000) # number of eval images
     ap.add_argument("--save-eval-images", action="store_true") # save the images for eval
+    ap.add_argument("--sources", nargs="+", default=list(SOURCES), choices=list(SOURCES))
+
     args = ap.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
-    vm = SigLIP2(model_name=args.model, device=device)
-    processor = vm.processor
-
-    from datasets import load_dataset
-    stream = load_dataset("allenai/pixmo-cap", split="train", streaming=True)
-    
-    kept, seen = 0, 0
+    vm = SigLIP2(model_name=args.model, device=device)    
 
     train_writer = ShardWriter(out_dir=args.out / "train", shard_size=args.shard_size, pipeline_mode="train")
     eval_writer = ShardWriter(out_dir=args.out / "eval", shard_size=args.shard_size, pipeline_mode="eval")
-
     images_dir = args.out / "eval" / "images"
 
     if args.save_eval_images:   
         images_dir.mkdir(parents=True, exist_ok=True)
         
-
+    
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
-        batch_rows: list[dict] = []
-        for row in stream:
-            seen += 1
-            batch_rows.append(row)
-            if len(batch_rows) < args.batch_size:
-                continue
-
-            images = list(pool.map(lambda r: fetch(r["image_url"]), batch_rows)) # collect images
-            samples = [Sample(im, r["caption"], r["image_url"]) for im, r in zip(images, batch_rows) if im is not None] #add image-caption pair
-            
-            batch_rows = []
-            if not samples:
-                continue
-
-            px = processor(images=[s.image for s in samples], return_tensors="pt").to(device)
-            with torch.no_grad():
-                output = vm.model(**px).last_hidden_state
-            output = output.cpu().numpy().astype(np.float16)
-
-            for feature, s in zip(output, samples):
-                writer = eval_writer if kept < args.eval_n else train_writer
-                if writer is eval_writer and args.save_eval_images:
-                    s.image.save(images_dir / f"{kept:05d}.jpg", "JPEG", quality=92)
-                
-                writer.add(feature, s.caption, s.url) # append to buffer and flush if full
-                kept += 1
-
-            if kept >= args.n:
-                break
-            if seen % 2000 == 0:
-                log.info("seen %d, kept %d (%.0f%% ok)", seen, kept, 100 * kept / seen)
+        for name in args.sources:
+            extract_source(
+                name=name, 
+                src=SOURCES[name], 
+                args=args, 
+                vm=vm, 
+                device=device, 
+                pool=pool,
+                train_writer=train_writer,
+                eval_writer=eval_writer,
+                images_dir=images_dir
+                )
 
     train_writer.flush()
     eval_writer.flush()
-    log.info("done: %d kept of %d seen", kept, seen)
 
 if __name__ == "__main__":
     main()

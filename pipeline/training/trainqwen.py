@@ -1,9 +1,8 @@
 import logging
 from pathlib import Path
-from PIL import Image
-
 
 import torch
+from PIL import Image
 from torch.utils.data import DataLoader
 
 # from transformers import get_constant_schedule_with_warmup
@@ -11,7 +10,6 @@ from language_model.qwen import Qwen
 from pipeline.training.config import ProjectorTrainConfigQwen
 from pipeline.training.feature_dataset import FeatureDataset
 from projector.two_layer_mlp import MLP
-
 from vision_model.model import SigLIP2
 
 logging.basicConfig(level=logging.INFO)

@@ -28,15 +28,19 @@ class FeatureDataset(Dataset):
         local = index - self.offsets[shard]
         if shard not in self._open:
             self._open[shard] = np.load(self.feature_files[shard], mmap_mode="r") # read mode (so it doesnt fill the RAM)
+        prompt, caption = self.captions[shard][local]
+
         return {
             "features": torch.from_numpy(np.array(self._open[shard][local])),
-            "caption": self.captions[shard][local]
+            "prompt": prompt,
+            "caption": caption
         }
 
     def init_feature_files(self) -> list:
         for path in self.feature_files:
             jsonl = path.parent / path.name.replace("features-", "caption-").replace(".npy", ".jsonl")
-            captions = [json.loads(line)["caption"] for line in jsonl.open()]
+            rows = [json.loads(line) for line in jsonl.open()]
+            captions = [(r.get("prompt", "Describe the image."), r["caption"]) for r in rows]
             features_len = np.load(path, mmap_mode="r").shape[0]
             if features_len != len(captions):
                 raise ValueError(f"{path.name}")
