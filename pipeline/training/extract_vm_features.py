@@ -125,8 +125,8 @@ def extract_source(name, src, args, vm, device, pool, train_writer, eval_writer,
         if len(batch_rows) < args.batch_size:
             continue
 
-        images = list(pool.map(lambda r: fetch(r["image_url"]), batch_rows)) # collect images
-        samples = [Sample(im, r["caption"], r["image_url"]) for im, r in zip(images, batch_rows) if im is not None] #add image-caption pair
+        images = list(pool.map(lambda r: fetch(r["image_field"]), batch_rows)) # collect images
+        samples = [Sample(im, *src.to_text(r), r["image_field"]) for im, r in zip(images, batch_rows) if im is not None] #add image-caption pair
         
         batch_rows = []
         if not samples:

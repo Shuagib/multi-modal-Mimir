@@ -59,8 +59,7 @@ def build_batch(prompts, captions, features):
     # mask for 
     token_type_ids = torch.zeros_like(attention_mask)
     token_type_ids[:, :n_img] = 1
-    import inspect
-    print("token_type_ids" in inspect.signature(llm.model.forward).parameters)
+    
     return inputs, attention_mask, labels, token_type_ids
 
 
