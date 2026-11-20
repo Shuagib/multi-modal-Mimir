@@ -154,26 +154,32 @@ for e in range(c.epochs):
 vm = SigLIP2(model_name=c.vision_model_name, device=device)
 
 # image_path = Path("test_images/shuggibuggidubbi.png")
-image_path = Path("test_images/annemette.jpeg")
-prompt = ["Rate this woman on 1-10 on attractivenes, hotness and sexyness",
-            "How many eyes doss this paricular man have",
-            "Does this man look kappy or sad?",
-            "What ethnic race is this man?"
-            ]
+image_path = Path("test_images/shuggibuggidubbi.png")
+prompts = [
+    "Describe the image.",
+    "What is the person in the image doing?",
+    "What is the person wearing?",
+    "What objects are on the desk?",
+    "Is the person smiling?",
+    "What can you see through the window?",
+    "What color are the curtains?",
+    "Is the image taken indoors or outdoors?",
+    "What kind of room is this?",
+    "What is the lighting like in this image?",
+    "What ethnic race is this man?"
+
+]
 
 with torch.no_grad():
     img = Image.open(image_path).convert("RGB")
-    features = vm.embed(img)
-    img_emb = mlp(features.float())
+    img_emb = mlp(vm.embed(img).float())
 
-    prompt_ids = llm.tokenizer.apply_chat_template(
-        [{"role": "user", "content": prompt[0]}],
-        add_generation_prompt=True, return_tensors="pt")["input_ids"].to(device)
-    txt_emb = llm.embedding(prompt_ids)
+    for p in prompts:
+        prompt_ids = llm.tokenizer.apply_chat_template(
+            [{"role": "user", "content": p}],
+            add_generation_prompt=True, return_tensors="pt")["input_ids"].to(device)
+        txt_emb = llm.embedding(prompt_ids)
+        inputs = torch.cat([img_emb.to(txt_emb.dtype), txt_emb], dim=1)
 
-    inputs = torch.cat([img_emb.to(txt_emb.dtype), txt_emb], dim=1)
-
-print(f"\n{'prompt:':<11}{prompt}")
-print(f"{'generated:':<11}{llm.generate_and_decode(inputs, max_new_tokens=300)}")
-
-
+        print(f"\n{'prompt:':<11}{p}")
+        print(f"{'generated:':<11}{llm.generate_and_decode(inputs, max_new_tokens=300)}")
