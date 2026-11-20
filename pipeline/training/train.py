@@ -39,7 +39,7 @@ def build_batch(prompts, captions, features):
                     [{"role": "user", "content": p}],
                     add_generation_prompt=True, return_tensors="pt")["input_ids"]
         c_ids = llm.tokenizer(cap + llm.tokenizer.eos_token, add_special_tokens=False).input_ids
-        seqs.append(p_ids + c_ids)
+        seqs.append([p_ids] + c_ids)
         label_seqs.append([-100] * len(p_ids) + c_ids)
 
     L = max(map(len,seqs))
@@ -51,7 +51,7 @@ def build_batch(prompts, captions, features):
     text = llm.embedding(ids)
     inputs = torch.cat([mlp(features).to(text.dtype), text], dim=1)
     n_img = inputs.shape[1] - L
-    attention_mask = torch.cat([torch.ones(B, n_img, dtype=torch.long, device=device), caption_mask], dim=1)
+    attention_mask = torch.cat([torch.ones(B, n_img, dtype=torch.long, device=device), text_mask], dim=1)
     labels = torch.cat([torch.full((B,n_img), -100, device=device), text_labels], dim=1)
     
     # mask for 
