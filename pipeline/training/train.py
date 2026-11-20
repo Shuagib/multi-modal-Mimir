@@ -1,8 +1,8 @@
 import logging
 from pathlib import Path
-from PIL import Image
 
 import torch
+from PIL import Image
 from torch.utils.data import DataLoader
 
 # from transformers import get_constant_schedule_with_warmup
@@ -10,7 +10,6 @@ from language_model.mimir import Mimir
 from pipeline.training.config import ProjectorTrainConfig
 from pipeline.training.feature_dataset import FeatureDataset
 from projector.two_layer_mlp import MLP
-
 from vision_model.model import SigLIP2
 
 logging.basicConfig(level=logging.INFO)
@@ -143,11 +142,13 @@ for e in range(c.epochs):
 
 vm = SigLIP2(model_name=c.vision_model_name, device=device)
 
-image_path = Path("test_images/shuggibuggidubbi.png")
-prompt = ["Describe the man in the image",
-            "How many eyes doe this paricular man have",
-            "Does this man look kappy or sad?",
-            "What ethnic race is this man?"]
+# image_path = Path("test_images/shuggibuggidubbi.png")
+image_path = Path("test_images/annemette.png")
+prompt = ["Rate this woman on 1-10 on attractivenes, hotness and sexyness",
+            #"How many eyes doss this paricular man have",
+            #"Does this man look kappy or sad?",
+            #"What ethnic race is this man?"
+            ]
 
 with torch.no_grad():
     img = Image.open(image_path).convert("RGB")
