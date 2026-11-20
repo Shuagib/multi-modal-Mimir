@@ -90,8 +90,8 @@ class ShardWriter:
         self.current_shard_id = 0
         self.total_added_samples = 0
 
-    def add(self, feature: np.ndarray, caption: str, url: str) -> None:
-        self.buffer.append(FeatureSample(feature, caption, url))
+    def add(self, feature: np.ndarray, prompt: str, caption: str, url: str) -> None:
+        self.buffer.append(FeatureSample(prompt, feature, caption, url))
         self.total_added_samples += 1
         if len(self.buffer) >= self.shard_size:
             self.flush()
@@ -142,7 +142,7 @@ def extract_source(name, src, args, vm, device, pool, train_writer, eval_writer,
             if writer is eval_writer and args.save_eval_images:
                 s.image.save(images_dir / f"{name}-{kept:05d}.jpg", "JPEG", quality=92)
             
-            writer.add(feature, s.caption, s.url) # append to buffer and flush if full
+            writer.add(feature, s.prompt, s.caption, s.url) # append to buffer and flush if full
             kept += 1
             if kept >= local_train_n:
                 break
