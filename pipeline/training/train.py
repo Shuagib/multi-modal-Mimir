@@ -30,6 +30,8 @@ def loader(data):
 train_load = loader(train_data) 
 eval_load = loader(eval_data)
 
+# import inspect
+# print("token_type_ids" in inspect.signature(llm.model.forward).parameters)
 
 def build_batch(prompts, captions, features):
     B = features.shape[0]
@@ -37,16 +39,16 @@ def build_batch(prompts, captions, features):
     for p, cap in zip(prompts, captions):
         p_ids = llm.tokenizer.apply_chat_template(
                     [{"role": "user", "content": p}],
-                    add_generation_prompt=True, return_tensors="pt")["input_ids"]
+                    add_generation_prompt=True)["input_ids"]
         c_ids = llm.tokenizer(cap + llm.tokenizer.eos_token, add_special_tokens=False).input_ids
-        seqs.append([p_ids] + c_ids)
+        seqs.append(p_ids + c_ids)
         label_seqs.append([-100] * len(p_ids) + c_ids)
 
     L = max(map(len,seqs))
     pad = llm.tokenizer.pad_token_id
-    ids = torch.tensor([s * [pad] * (L - len(s)) for s in seqs])
-    text_mask = torch.tensor([[1] * len(s) + [0] * (L - len(s)) for s in seqs])
-    text_labels = torch.tensor([s + [-100] * (L - len(s)) for s in label_seqs])
+    ids = torch.tensor([s * [pad] * (L - len(s)) for s in seqs], device=device)
+    text_mask = torch.tensor([[1] * len(s) + [0] * (L - len(s)) for s in seqs], device=device)
+    text_labels = torch.tensor([s + [-100] * (L - len(s)) for s in label_seqs], device=device)
 
     text = llm.embedding(ids)
     inputs = torch.cat([mlp(features).to(text.dtype), text], dim=1)
