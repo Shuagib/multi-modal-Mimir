@@ -91,7 +91,7 @@ class ShardWriter:
         self.total_added_samples = 0
 
     def add(self, feature: np.ndarray, prompt: str, caption: str, url: str) -> None:
-        self.buffer.append(FeatureSample(prompt, feature, caption, url))
+        self.buffer.append(FeatureSample(feature, prompt, caption, url))
         self.total_added_samples += 1
         if len(self.buffer) >= self.shard_size:
             self.flush()
