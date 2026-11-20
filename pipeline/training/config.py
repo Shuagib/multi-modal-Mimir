@@ -86,12 +86,13 @@ class ProjectorTrainConfigQwen:
     target_rms: float = 0.026090
     epochs = 10
 
-    batch_size: int = 4
+    batch_size: int = 2 
     learning_rate: float = 1e-3
     num_epochs: int = 20
 
     image_cache_dir: Path = PROJECT_ROOT / "data" / "image_cache"
     checkpoint_dir: Path = PROJECT_ROOT / "checkpoints" / "projector_qwen"
+    report_dir: Path = PROJECT_ROOT / "report"
     train_dir: Path = PROJECT_ROOT / "data" / "train"
     eval_dir: Path = PROJECT_ROOT / "data" / "eval"
 

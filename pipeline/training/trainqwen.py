@@ -1,5 +1,13 @@
 import logging
 from pathlib import Path
+<<<<<<< HEAD
+=======
+from PIL import Image
+import matplotlib
+matplotlib.use("Agg")  # There is no screen in Ucloud therefore we need this tihi
+import matplotlib.pyplot as plt
+
+>>>>>>> 99d7a28952f98138530a2a62e2b3625d6126423a
 
 import torch
 from PIL import Image
@@ -12,6 +20,8 @@ from pipeline.training.feature_dataset import FeatureDataset
 from projector.two_layer_mlp import MLP
 from vision_model.model import SigLIP2
 
+torch.manual_seed(0)
+
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("train")
 
@@ -20,6 +30,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.ba
 
 mlp = MLP(c.mlp_in_dim, c.mlp_hidden_dim, c.mlp_out_dim, c.target_rms).to(device)
 llm =   Qwen(model_name=c.llm_model_name, device=device)
+
+#Unblock this if we want to freeze the weights
+# for p in llm.model.parameters():
+#     p.requires_grad_(False)
 
 train_data = FeatureDataset(c.train_dir)
 eval_data = FeatureDataset(c.eval_dir)
@@ -43,6 +57,7 @@ optimizer = torch.optim.AdamW([
 
 llm.model.train()
 
+train_losses, val_losses = [], []
 
 
 for e in range(c.epochs):
@@ -76,15 +91,27 @@ for e in range(c.epochs):
         labels = torch.cat([torch.full((B,prefix), -100, device=device), labels], dim=1)
 
         # Qwen loss
-     
         Qwen_loss = llm.model(inputs_embeds=inputs, attention_mask=attention_mask, labels=labels).loss
-        # mlp_loss.backward()
+
+        if not torch.isfinite(Qwen_loss):
+            print(f"Epoch {e+1}, batch {batch_num}, captions: {captions}")
+            optimizer.zero_grad()
+            continue
+
         Qwen_loss.backward()
+        norm = torch.nn.utils.clip_grad_norm_(list(mlp.parameters()) + list(llm.model.parameters()), 1.0)
+        if not torch.isfinite(norm):
+            print(f"epoch {e+1}, batch {batch_num}")
+            optimizer.zero_grad()
+            continue
         optimizer.step()
         optimizer.zero_grad()
-        train_loss  += Qwen_loss.item()
-        #print(f"{e+1:>6} | {batch_num+1:>6} | {Qwen_loss.item()/train_load}")
+        train_loss += Qwen_loss.item()
+        
+    train_losses.append(train_loss / len(train_load))
+
     print(f"epoch {e+1} | training loss {train_loss / len(train_load):.4f}")
+
     llm.model.eval()
     mlp.eval()
     val_total = 0.0
@@ -107,6 +134,7 @@ for e in range(c.epochs):
 
             val_total += llm.model(inputs_embeds=inputs, attention_mask=attention_mask,
                                    labels=labels).loss.item()
+    val_losses.append(val_total / len(eval_load))
 
     print(f"epoch {e+1} | validation loss {val_total / len(eval_load):.4f}")
 
@@ -142,7 +170,7 @@ mlp.eval()
 image_path = Path("test_images/shuggibuggidubbi.png")
 prompt = ["Describe the man in the image",
             "How many eyes doe this paricular man have",
-            "Does this man look happy or sad?",
+            "Describe the person in the picutre, their gender, hair colour and facial expression.",
             "What ethnic race is this man?"]
 
 with torch.no_grad():
@@ -158,10 +186,23 @@ with torch.no_grad():
 
     inputs = torch.cat([img_emb.to(txt_emb.dtype), txt_emb], dim=1)
 
+
+print("mlp ok:", all(torch.isfinite(p).all().item() for p in mlp.parameters()),
+      "| qwen ok:", all(torch.isfinite(p).all().item() for p in llm.model.parameters()),
+      "| inputs ok:", torch.isfinite(inputs).all().item())
+
+
 print("\nprompt: ", prompt)
 print("generated:", llm.generate_and_decode(inputs, max_new_tokens=300))
 
 
 
 
-    
+epochs = range(1, len(train_losses) + 1)
+plt.plot(epochs, train_losses, label="train")
+plt.plot(epochs, val_losses, label="validation")
+plt.xlabel("epoch")
+plt.ylabel("loss")
+plt.legend()
+c.report_dir.mkdir(parents=True, exist_ok=True)
+plt.savefig(c.report_dir / "loss_qwen2.png", dpi=150)
