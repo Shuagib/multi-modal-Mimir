@@ -46,7 +46,7 @@ def build_batch(prompts, captions, features):
 
     L = max(map(len,seqs))
     pad = llm.tokenizer.pad_token_id
-    ids = torch.tensor([s * [pad] * (L - len(s)) for s in seqs], device=device)
+    ids = torch.tensor([s + [pad] * (L - len(s)) for s in seqs], device=device)
     text_mask = torch.tensor([[1] * len(s) + [0] * (L - len(s)) for s in seqs], device=device)
     text_labels = torch.tensor([s + [-100] * (L - len(s)) for s in label_seqs], device=device)
 
