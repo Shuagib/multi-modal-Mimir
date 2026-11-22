@@ -23,11 +23,10 @@ class ProjectorTrainConfig:
     mlp_out_dim: int = 1536
   
     target_rms: float = 0.009060
-    epochs = 1
 
     batch_size: int = 4
     learning_rate: float = 1e-3
-    num_epochs: int = 20
+    num_epochs: int = 10
 
     image_cache_dir: Path = PROJECT_ROOT / "data" / "image_cache"
     log_dir: Path = PROJECT_ROOT / "pipeline" / "training" / "logs"
