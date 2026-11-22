@@ -11,7 +11,9 @@ from pipeline.training.config import ProjectorTrainConfig
 from pipeline.training.feature_dataset import FeatureDataset
 from projector.two_layer_mlp import MLP
 from vision_model.model import SigLIP2
-from transformers import get_cosine_schedule_with_warmup
+#from transformers import get_cosine_schedule_with_warmup
+from torch.optim.lr_scheduler import LambdaLR
+
 
 
 logging.basicConfig(level=logging.WARNING)
@@ -87,11 +89,18 @@ optimizer = torch.optim.AdamW([
 ])
 
 total_steps = len(train_load) * c.num_epochs
+llm_warmup = int(0.3 * total_steps)          # 30% of training
+
 # scheduler = get_cosine_schedule_with_warmup(
 #     optimizer,
 #     num_warmup_steps=int(0.05 * total_steps),
 #     num_training_steps=total_steps
 # )
+
+scheduler = LambdaLR(optimizer, lr_lambda=[
+    lambda step: 1.0,                                    # full lr from the start
+    lambda step: min(1.0, step / max(1, llm_warmup)),    # linear ramp-up
+])
 
 
 
@@ -122,14 +131,16 @@ for e in range(c.num_epochs):
                                labels=labels, token_type_ids=token_type_ids).loss
 
         mimir_loss.backward()
+        torch.nn.utils.clip_grad_norm_(list(mlp.parameters()) + list(llm.model.parameters()), 1.0)
+
         
         if (batch_num + 1) % LOG_EVERY == 0:
                     g_mlp = sum(p.grad.norm()**2 for p in mlp.parameters() if p.grad is not None)**0.5
                     g_llm = sum(p.grad.norm()**2 for p in llm.model.parameters() if p.grad is not None)**0.5
                     print(f"grad norm  mlp {g_mlp:.4f}  llm {g_llm:.4f}")
-                    
+
         optimizer.step()
-        # scheduler.step()
+        scheduler.step()
         optimizer.zero_grad()
 
         running_loss += mimir_loss.item()
