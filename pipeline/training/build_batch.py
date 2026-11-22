@@ -1,6 +1,6 @@
 import torch
 
-def build_batch(prompts, captions, features, llm, mlp):
+def build_batch(prompts, captions, features, llm, mlp, c):
     B = features.shape[0]
     seqs, label_seqs = [], []
     for p, cap in zip(prompts, captions):

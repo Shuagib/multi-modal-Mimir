@@ -1,5 +1,6 @@
-def val_loss(shuffle=False, n_batches=50):
-    llm.model.eval(); mlp.eval()
+def val_loss(llm, mlp, eval_load, shuffle, shuffle=False, n_batches=50):
+    llm.model.eval()
+    mlp.eval()
     total, n = 0.0, 0
     with torch.no_grad():
         for i, batch in enumerate(eval_load):

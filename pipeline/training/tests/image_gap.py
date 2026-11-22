@@ -11,7 +11,7 @@ def image_gap(llm, mlp, eval_load, c, n_batches=50):
             f = batch["features"].to(c.device).float()
             for shuffle in (False, True):
                 ff = f.roll(1, dims=0) if shuffle else f
-                inputs, am, labels, tti = build_batch(batch["prompt"], batch["caption"], ff, llm, mlp)
+                inputs, am, labels, tti = build_batch(batch["prompt"], batch["caption"], ff, llm, mlp, c)
                 loss = llm.model(inputs_embeds=inputs, attention_mask=am,
                                  labels=labels, token_type_ids=tti).loss.item()
                 if shuffle: shuf_total += loss
