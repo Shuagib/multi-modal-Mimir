@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("train")
 
 c = ProjectorTrainConfig()
-LOG_EVERY = 1
+LOG_EVERY = 100
 running_loss = 0.0
 max_batch = 10
 
