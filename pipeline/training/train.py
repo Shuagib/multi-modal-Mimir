@@ -99,7 +99,7 @@ def val_loss(shuffle=False, n_batches=50):
     return total / n
 
 optimizer = torch.optim.AdamW([
-    {"params": mlp.parameters(),       "lr": 1e-3, "weight_decay": 0.01},
+    {"params": mlp.parameters(),       "lr": 1e-4, "weight_decay": 0.01},
     {"params": llm.model.parameters(), "lr": 2e-5, "weight_decay": 0.0},
 ])
 
@@ -165,6 +165,10 @@ for e in range(c.num_epochs):
             print(f"{e+1:>6} | {batch_num+1:>6} | {avg:>8.4f}")
             log_row(e + 1, batch_num + 1, avg, "") #, scheduler.get_last_lr()[0])
             running_loss = 0.0
+
+        out_c = out - out.mean(dim=0, keepdim=True)
+        cos_c = torch.nn.functional.cosine_similarity(out_c[0], out_c[1], dim=0)
+        print(f"SigLIP cos {cos_in:.3f}  MLP cos {cos_out:.3f}  MLP centered {cos_c:.3f}")
 
         if batch_num >= max_batch:
             break
