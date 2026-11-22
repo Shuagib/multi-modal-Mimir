@@ -184,7 +184,7 @@ for e in range(c.num_epochs):
 
     v_ok = val_loss()
     v_shuffle = val_loss(shuffle=True)
-    print(f"epoch {e+1}/{c.num_epochs} │ val correct {v_ok:.4f} │ val shuffled {v_shuffle:.4f} │ gap {v_shuf - v_ok:.4f}")
+    print(f"epoch {e+1}/{c.num_epochs} │ val correct {v_ok:.4f} │ val shuffled {v_shuffle:.4f} │ gap {v_shuffle - v_ok:.4f}")
     
 
     from pipeline.training.judge import judge_val
