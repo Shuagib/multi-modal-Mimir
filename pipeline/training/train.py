@@ -76,7 +76,7 @@ def build_batch(prompts, captions, features):
 
 
 optimizer = torch.optim.AdamW([
-    {"params": mlp.parameters(),       "lr": 1e-4, "weight_decay": 0.01},
+    {"params": mlp.parameters(),       "lr": 1e-3, "weight_decay": 0.01},
     {"params": llm.model.parameters(), "lr": 2e-5, "weight_decay": 0.0},
 ])
 
