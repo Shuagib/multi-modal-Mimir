@@ -133,7 +133,7 @@ for e in range(c.num_epochs):
 
     avg_val = val_total / len(eval_load)
 
-    v_ok, v_shuffle = image_gap()
+    v_ok, v_shuffle = image_gap(llm, mlp, eval_load, c)
     print(f"epoch {e+1}/{c.num_epochs} │ val correct {v_ok:.4f} │ val shuffled {v_shuffle:.4f} │ gap {v_shuffle - v_ok:.4f}")
     
     with torch.no_grad():
