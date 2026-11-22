@@ -82,6 +82,21 @@ def build_batch(prompts, captions, features):
 
     return inputs, attention_mask, labels, token_type_ids
 
+def val_loss(shuffle=False, n_batches=50):
+    llm.model.eval(); mlp.eval()
+    total, n = 0.0, 0
+    with torch.no_grad():
+        for i, batch in enumerate(eval_load):
+            if i >= n_batches: break
+            f = batch["features"].to(c.device).float()
+            if shuffle:
+                f = f.roll(1, dims=0)
+            inputs, am, labels, tti = build_batch(batch["prompt"], batch["caption"], f)
+            total += llm.model(inputs_embeds=inputs, attention_mask=am,
+                               labels=labels, token_type_ids=tti).loss.item()
+            n += 1
+    llm.model.train(); mlp.train()
+    return total / n
 
 optimizer = torch.optim.AdamW([
     {"params": mlp.parameters(),       "lr": 1e-3, "weight_decay": 0.01},
@@ -150,6 +165,12 @@ for e in range(c.num_epochs):
             print(f"{e+1:>6} | {batch_num+1:>6} | {avg:>8.4f}")
             log_row(e + 1, batch_num + 1, avg, "") #, scheduler.get_last_lr()[0])
             running_loss = 0.0
+
+            avg_val = val_total / len(eval_load)
+
+    v_ok = val_loss()
+    v_shuffle = val_loss(shuffle=True)
+    print(f"epoch {e+1}/{c.num_epochs} │ val correct {v_ok:.4f} │ val shuffled {v_shuffle:.4f} │ gap {v_shuf - v_ok:.4f}")
 
         # if batch_num >= max_batch:
         #     break
