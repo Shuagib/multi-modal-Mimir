@@ -122,6 +122,12 @@ for e in range(c.num_epochs):
                                labels=labels, token_type_ids=token_type_ids).loss
 
         mimir_loss.backward()
+        
+        if (batch_num + 1) % LOG_EVERY == 0:
+                    g_mlp = sum(p.grad.norm()**2 for p in mlp.parameters() if p.grad is not None)**0.5
+                    g_llm = sum(p.grad.norm()**2 for p in llm.model.parameters() if p.grad is not None)**0.5
+                    print(f"grad norm  mlp {g_mlp:.4f}  llm {g_llm:.4f}")
+                    
         optimizer.step()
         # scheduler.step()
         optimizer.zero_grad()
@@ -133,10 +139,6 @@ for e in range(c.num_epochs):
             print(f"{e+1:>6} | {batch_num+1:>6} | {avg:>8.4f}")
             log_row(e + 1, batch_num + 1, avg, "") #, scheduler.get_last_lr()[0])
             running_loss = 0.0
-
-            g_mlp = sum(p.grad.norm()**2 for p in mlp.parameters() if p.grad is not None)**0.5
-            g_llm = sum(p.grad.norm()**2 for p in llm.model.parameters() if p.grad is not None)**0.5
-            print(f"grad norm  mlp {g_mlp:.4f}  llm {g_llm:.4f}")
 
         # if batch_num >= max_batch:
         #     break
