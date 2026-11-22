@@ -129,7 +129,7 @@ for e in range(c.num_epochs):
         optimizer.step()
         # scheduler.step()
         optimizer.zero_grad()
-        
+
         running_loss += mimir_loss.item()
 
         if (batch_num + 1) % LOG_EVERY == 0:
@@ -152,7 +152,7 @@ for e in range(c.num_epochs):
     avg_val = val_total / len(eval_load)
 
     from pipeline.training.judge import judge_val
-    acc, cov = judge_val(llm, mlp, eval_data)
+    acc, cov = judge_val(llm, mlp, eval_data, c)
     print(f"epoch {e+1}/{c.num_epochs} │ judge accuracy {acc:.2f} │ coverage {cov:.2f}")
     log_row(e + 1, "", "", avg_val, "", acc, cov)
     print("─" * len(header))

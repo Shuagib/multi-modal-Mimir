@@ -36,17 +36,17 @@ def judge_score(ref: str, gen: str):
     coverage = re.search(r"coverage:\s*(\d+)", text)
     return (int(accuracy.group(1)) if accuracy else None, int(coverage.group(1)) if coverage else None)
 
-def judge_val(llm, mlp,eval_data):
+def judge_val(llm, mlp,eval_data, config):
     llm.model.eval()
     mlp.eval()
     accuracies, coverages = [], []
     with torch.no_grad():
         for i in range(JUDGE_N):
             s = eval_data[i]
-            features = torch.as_tensor(s["features"]).unsqueeze(0).to(c.device)
+            features = torch.as_tensor(s["features"]).unsqueeze(0).to(config.device)
             prompt_ids = llm.tokenizer.apply_chat_template(
                 [{"role": "user", "content": s["prompt"]}],
-                add_generation_prompt=True, return_tensors="pt")["input_ids"].to(c.device)
+                add_generation_prompt=True, return_tensors="pt")["input_ids"].to(config.device)
             text = llm.embedding(prompt_ids)
             inputs = torch.cat([mlp(features).to(text.dtype), text], dim=1)
             gen = llm.generate_and_decode(inputs, max_new_tokens=300)       
