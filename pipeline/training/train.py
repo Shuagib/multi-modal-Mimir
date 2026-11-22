@@ -27,6 +27,8 @@ llm = Mimir(model_name=c.llm_model_name, device=c.device)
 # llm.model = get_peft_model(llm.model, LoraConfig(r=16, lora_alpha=32,
 #                 target_modules=["q_proj", "k_proj", "v_proj", "o_proj"], lora_dropout=0.05))
 
+# git pull & uv run pipeline/training/train.py
+
 train_data = FeatureDataset(c.train_dir)
 eval_data = FeatureDataset(c.eval_dir)
 
@@ -110,7 +112,7 @@ for e in range(c.num_epochs):
         eos = llm.tokenizer.eos_token # <turn|>
         tok = llm.tokenizer(
             [cap + eos for cap in captions],
-            add_special_tokens=False, padding=True, padding_side="right", return_tensors="pt").to(device)
+            add_special_tokens=False, padding=True, padding_side="right", return_tensors="pt").to(c.device)
 
         caption_ids = tok.input_ids
         caption_mask = tok.attention_mask        
