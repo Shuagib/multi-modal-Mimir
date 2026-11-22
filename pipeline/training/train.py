@@ -62,8 +62,9 @@ def build_batch(prompts, captions, features):
     text_mask = torch.tensor([[1] * len(s) + [0] * (L - len(s)) for s in seqs], device=c.device)
     text_labels = torch.tensor([s + [-100] * (L - len(s)) for s in label_seqs], device=c.device)
 
+    n_head = 4
     text = llm.embedding(ids)
-    inputs = torch.cat([mlp(features).to(text.dtype), text], dim=1)
+    inputs = torch.cat([text[:, :n_head], img, text[:, n_head:]], dim=1)
     n_img = inputs.shape[1] - L
     attention_mask = torch.cat([torch.ones(B, n_img, dtype=torch.long, device=c.device), text_mask], dim=1)
     labels = torch.cat([torch.full((B,n_img), -100, device=c.device), text_labels], dim=1)
@@ -192,4 +193,4 @@ with torch.no_grad():
         inputs = torch.cat([img_emb.to(txt_emb.dtype), txt_emb], dim=1)
 
         print(f"\n{'prompt:':<11}{p}")
-        print(f"{'generated:':<11}{llm.generate_and_decode(inputs, max_new_tokens=300)}")
+        print(f"{'generated:':<11}{llm.generate_and_decode(inputs, max_new_tokens=300, n_head=4)}")
