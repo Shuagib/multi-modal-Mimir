@@ -30,7 +30,7 @@ class ProjectorTrainConfig:
     num_epochs: int = 20
 
     image_cache_dir: Path = PROJECT_ROOT / "data" / "image_cache"
-    checkpoint_dir: Path = PROJECT_ROOT / "checkpoints" / "projector_mimir"
+    log_dir: Path = PROJECT_ROOT / "pipeline" / "training" / "logs"
     train_dir: Path = PROJECT_ROOT / "data" / "train"
     eval_dir: Path = PROJECT_ROOT / "data" / "eval"
 

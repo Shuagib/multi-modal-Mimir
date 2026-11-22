@@ -92,6 +92,15 @@ print(header)
 print("─" * len(header))
 
 old_val = False
+import csv, time
+log_path = c.log_dir / f"log_{time.strftime('%Y%m%d-%H%M%S')}.csv"
+log_path.parent.mkdir(parents=True, exist_ok=True)
+with open(log_path, "w", newline="") as f:
+    csv.writer(f).writerow(["epoch", "step", "train_loss", "val_loss", "lr"])
+
+def log_row(*row):
+    with open(log_path, "a", newline="") as f:
+        csv.writer(f).writerow(row)
 
 for e in range(c.epochs):
     for batch_num, batch in enumerate(train_load):
@@ -119,6 +128,7 @@ for e in range(c.epochs):
         scheduler.step()
         optimizer.zero_grad()
         print(f"{e+1:>6} | {batch_num+1:>6} | {mimir_loss.item():>8.4f}")
+        log_row(e + 1, batch_num + 1, mimir_loss.item(), "", scheduler.get_last_lr()[0])
 
     llm.model.eval()
     mlp.eval()
@@ -138,8 +148,10 @@ for e in range(c.epochs):
         print(f"epoch {e+1}/{c.epochs} │ val loss {val_total / len(eval_load):.4f} │ val diff {old_val - new_val}")
     else: 
         print(f"epoch {e+1}/{c.epochs} │ val loss {val_total / len(eval_load):.4f}")
+    log_row(e + 1, "", "", new_val, "")
     old_val = new_val
     print("─" * len(header))
+    
 
 
     llm.model.train()
