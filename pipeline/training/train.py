@@ -14,7 +14,7 @@ from vision_model.model import SigLIP2
 from transformers import get_cosine_schedule_with_warmup
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger("train")
 
 c = ProjectorTrainConfig()
@@ -133,6 +133,10 @@ for e in range(c.num_epochs):
             print(f"{e+1:>6} | {batch_num+1:>6} | {avg:>8.4f}")
             log_row(e + 1, batch_num + 1, avg, "") #, scheduler.get_last_lr()[0])
             running_loss = 0.0
+
+            g_mlp = sum(p.grad.norm()**2 for p in mlp.parameters() if p.grad is not None)**0.5
+            g_llm = sum(p.grad.norm()**2 for p in llm.model.parameters() if p.grad is not None)**0.5
+            print(f"grad norm  mlp {g_mlp:.4f}  llm {g_llm:.4f}")
 
         # if batch_num >= max_batch:
         #     break
