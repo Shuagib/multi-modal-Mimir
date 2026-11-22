@@ -23,7 +23,7 @@ class ProjectorTrainConfig:
     mlp_out_dim: int = 1536
   
     target_rms: float = 0.009060
-    epochs = 10
+    epochs = 1
 
     batch_size: int = 4
     learning_rate: float = 1e-3
