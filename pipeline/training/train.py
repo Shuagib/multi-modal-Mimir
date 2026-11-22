@@ -39,7 +39,7 @@ eval_load = loader(eval_data)
 # import inspect
 # print("token_type_ids" in inspect.signature(llm.model.forward).parameters)
 
-print(f"running {c.epochs} epocs")
+print(f"running {c.num_epochs} epocs")
 
 def build_batch(prompts, captions, features):
     B = features.shape[0]
@@ -76,7 +76,7 @@ optimizer = torch.optim.AdamW([
     {"params": llm.model.parameters(), "lr": 2e-5},
 ], weight_decay=0.05)
 
-total_steps = len(train_load) * c.epochs
+total_steps = len(train_load) * c.num_epochs
 scheduler = get_cosine_schedule_with_warmup(
     optimizer,
     num_warmup_steps=int(0.05 * total_steps),
@@ -102,7 +102,7 @@ def log_row(*row):
     with open(log_path, "a", newline="") as f:
         csv.writer(f).writerow(row)
 
-for e in range(c.epochs):
+for e in range(c.num_epochs):
     for batch_num, batch in enumerate(train_load):
 
         features = batch["features"].to(device).float()
@@ -145,9 +145,9 @@ for e in range(c.epochs):
 
     print("─" * len(header))
     if old_val:
-        print(f"epoch {e+1}/{c.epochs} │ val loss {val_total / len(eval_load):.4f} │ val diff {old_val - new_val}")
+        print(f"epoch {e+1}/{c.num_epochs} │ val loss {val_total / len(eval_load):.4f} │ val diff {old_val - new_val}")
     else: 
-        print(f"epoch {e+1}/{c.epochs} │ val loss {val_total / len(eval_load):.4f}")
+        print(f"epoch {e+1}/{c.num_epochs} │ val loss {val_total / len(eval_load):.4f}")
     log_row(e + 1, "", "", new_val, "")
     old_val = new_val
     print("─" * len(header))
