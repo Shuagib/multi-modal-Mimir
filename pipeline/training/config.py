@@ -28,7 +28,7 @@ class ProjectorTrainConfig:
 
     batch_size: int = 4
     learning_rate: float = 1e-3
-    num_epochs: int = 1
+    num_epochs: int = 5
 
     image_cache_dir: Path = PROJECT_ROOT / "data" / "image_cache"
     log_dir: Path = PROJECT_ROOT / "pipeline" / "training" / "logs"
