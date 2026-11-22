@@ -126,7 +126,7 @@ for e in range(c.num_epochs):
     with torch.no_grad():
         for batch in eval_load:
             features = batch["features"].to(c.device).float()
-            inputs, attention_mask, labels, token_type_ids = build_batch(batch["prompt"], batch["caption"], features)
+            inputs, attention_mask, labels, token_type_ids = build_batch(batch["prompt"], batch["caption"], features, c)
 
             val_total += llm.model(inputs_embeds=inputs, attention_mask=attention_mask,
                                    labels=labels, token_type_ids=token_type_ids).loss.item()
