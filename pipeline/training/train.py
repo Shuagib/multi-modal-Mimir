@@ -140,7 +140,7 @@ for e in range(c.num_epochs):
             running_loss = 0.0
 
         if batch_num > max_batch:
-            break
+            continue
 
     llm.model.eval()
     mlp.eval()
