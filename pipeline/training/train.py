@@ -186,6 +186,13 @@ for e in range(c.num_epochs):
     v_shuffle = val_loss(shuffle=True)
     print(f"epoch {e+1}/{c.num_epochs} │ val correct {v_ok:.4f} │ val shuffled {v_shuffle:.4f} │ gap {v_shuffle - v_ok:.4f}")
     
+    with torch.no_grad():
+        b = next(iter(eval_load))
+        f = b["features"].to(c.device).float()
+        out = mlp(f).flatten(1)
+        cos_in  = torch.nn.functional.cosine_similarity(f.flatten(1)[0], f.flatten(1)[1], dim=0)
+        cos_out = torch.nn.functional.cosine_similarity(out[0], out[1], dim=0)
+        print(f"SigLIP cos {cos_in:.3f}  MLP cos {cos_out:.3f}")
 
     from pipeline.training.judge import judge_val
     acc, cov = judge_val(llm, mlp, eval_data, c)
