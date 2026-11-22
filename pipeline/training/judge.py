@@ -48,8 +48,9 @@ def judge_val(llm, mlp,eval_data, config):
                 [{"role": "user", "content": s["prompt"]}],
                 add_generation_prompt=True, return_tensors="pt")["input_ids"].to(config.device)
             text = llm.embedding(prompt_ids)
-            inputs = torch.cat([mlp(features).to(text.dtype), text], dim=1)
-            gen = llm.generate_and_decode(inputs, max_new_tokens=300)       
+            img = mlp(features).to(text.dtype)
+            inputs = torch.cat([text[:, :4], img, text[:, 4:]], dim=1)
+            gen = llm.generate_and_decode(inputs, max_new_tokens=300, n_head=4)       
             acc, cov = judge_score(s["caption"], gen, config)
             if acc is not None: accuracies.append(acc)
             if cov is not None: coverages.append(cov)

@@ -29,7 +29,7 @@ llm = Mimir(model_name=c.llm_model_name, device=c.device)
 # llm.model = get_peft_model(llm.model, LoraConfig(r=16, lora_alpha=32,
 #                 target_modules=["q_proj", "k_proj", "v_proj", "o_proj"], lora_dropout=0.05))
 
-# git pull & uv run pipeline/training/train.py
+# git pull && uv run pipeline/training/train.py
 
 train_data = FeatureDataset(c.train_dir)
 eval_data = FeatureDataset(c.eval_dir)
@@ -64,15 +64,20 @@ def build_batch(prompts, captions, features):
 
     n_head = 4
     text = llm.embedding(ids)
+    img = mlp(features).to(text.dtype)
+    n_img = img.shape[1]
+
+    
     inputs = torch.cat([text[:, :n_head], img, text[:, n_head:]], dim=1)
-    n_img = inputs.shape[1] - L
-    attention_mask = torch.cat([torch.ones(B, n_img, dtype=torch.long, device=c.device), text_mask], dim=1)
-    labels = torch.cat([torch.full((B,n_img), -100, device=c.device), text_labels], dim=1)
+    ones = torch.ones(B, n_img, dtype=torch.long, device=c.device)
+    attention_mask = torch.cat([text_mask[:, :n_head], ones, text_mask[:, n_head:]], dim=1)
+    no_loss = torch.full((B, n_img), -100, device=c.device)
+    labels = torch.cat([text_labels[:, :n_head], no_loss, text_labels[:, n_head:]], dim=1)
     
-    # mask for 
+    # indicator matrix for mimir
     token_type_ids = torch.zeros_like(attention_mask)
-    token_type_ids[:, :n_img] = 1
-    
+    token_type_ids[:, n_head:n_head + n_img] = 1
+
     return inputs, attention_mask, labels, token_type_ids
 
 
@@ -108,25 +113,14 @@ def log_row(*row):
 
 for e in range(c.num_epochs):
     for batch_num, batch in enumerate(train_load):
-
-        features = batch["features"].to(c.device).float()
-        captions = batch["caption"]
-
-        eos = llm.tokenizer.eos_token # <turn|>
-        tok = llm.tokenizer(
-            [cap + eos for cap in captions],
-            add_special_tokens=False, padding=True, padding_side="right", return_tensors="pt").to(c.device)
-
-        caption_ids = tok.input_ids
-        caption_mask = tok.attention_mask        
-        # Mimir loss
+       
         features = batch["features"].to(c.device).float()
         inputs, attention_mask, labels, token_type_ids = build_batch(batch["prompt"], batch["caption"], features)
         # with torch.autocast("cuda", dtype=torch.bfloat16):
+        # Mimir loss
         mimir_loss = llm.model(inputs_embeds=inputs, attention_mask=attention_mask,
                                labels=labels, token_type_ids=token_type_ids).loss
 
-        # mlp_loss.backward()
         mimir_loss.backward()
         optimizer.step()
         # scheduler.step()
@@ -158,8 +152,7 @@ for e in range(c.num_epochs):
 
     from pipeline.training.judge import judge_val
     acc, cov = judge_val(llm, mlp, eval_data, c)
-    print(f"epoch {e+1}/{c.num_epochs} │ judge accuracy {acc:.2f} │ coverage {cov:.2f}")
-    log_row(e + 1, "", "", avg_val, "", acc, cov)
+    print(f"epoch {e+1}/{c.num_epochs} │ val loss {avg_val:.4f} │ judge accuracy {acc:.2f} │ coverage {cov:.2f}")    log_row(e + 1, "", "", avg_val, "", acc, cov)
     print("─" * len(header))
 
 vm = SigLIP2(model_name=c.vision_model_name, device=c.device)
@@ -190,7 +183,7 @@ with torch.no_grad():
             [{"role": "user", "content": p}],
             add_generation_prompt=True, return_tensors="pt")["input_ids"].to(c.device)
         txt_emb = llm.embedding(prompt_ids)
-        inputs = torch.cat([img_emb.to(txt_emb.dtype), txt_emb], dim=1)
+        inputs = torch.cat([txt_emb[:, :4], img_emb.to(txt_emb.dtype), txt_emb[:, 4:]], dim=1)
 
         print(f"\n{'prompt:':<11}{p}")
         print(f"{'generated:':<11}{llm.generate_and_decode(inputs, max_new_tokens=300, n_head=4)}")
