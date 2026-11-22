@@ -11,6 +11,8 @@ from pipeline.training.config import ProjectorTrainConfig
 from pipeline.training.feature_dataset import FeatureDataset
 from projector.two_layer_mlp import MLP
 from vision_model.model import SigLIP2
+from transformers import get_cosine_schedule_with_warmup
+
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("train")
@@ -20,6 +22,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.ba
 
 mlp = MLP(c.mlp_in_dim, c.mlp_hidden_dim, c.mlp_out_dim, c.target_rms).to(device)
 llm = Mimir(model_name=c.llm_model_name, device=device)
+
+# from peft import LoraConfig, get_peft_model
+# llm.model = get_peft_model(llm.model, LoraConfig(r=16, lora_alpha=32,
+#                 target_modules=["q_proj", "k_proj", "v_proj", "o_proj"], lora_dropout=0.05))
 
 train_data = FeatureDataset(c.train_dir)
 eval_data = FeatureDataset(c.eval_dir)
@@ -65,11 +71,19 @@ def build_batch(prompts, captions, features):
     return inputs, attention_mask, labels, token_type_ids
 
 
-
 optimizer = torch.optim.AdamW([
     {"params": mlp.parameters(),       "lr": 1e-4},
     {"params": llm.model.parameters(), "lr": 2e-5},
-])
+], weight_decay=0.05)
+
+total_steps = len(train_load) * c.epochs
+scheduler = get_cosine_schedule_with_warmup(
+    optimizer,
+    num_warmup_steps=int(0.05 * total_steps),
+    num_training_steps=total_steps
+)
+
+
 
 llm.model.train()
 
@@ -102,6 +116,7 @@ for e in range(c.epochs):
         # mlp_loss.backward()
         mimir_loss.backward()
         optimizer.step()
+        scheduler.step()
         optimizer.zero_grad()
         print(f"{e+1:>6} | {batch_num+1:>6} | {mimir_loss.item():>8.4f}")
 
