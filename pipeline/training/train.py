@@ -18,7 +18,8 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("train")
 
 c = ProjectorTrainConfig()
-
+LOG_EVERY = 100
+running_loss = 0.0
 
 mlp = MLP(c.mlp_in_dim, c.mlp_hidden_dim, c.mlp_out_dim, c.target_rms).to(c.device)
 llm = Mimir(model_name=c.llm_model_name, device=c.device)
@@ -74,16 +75,16 @@ def build_batch(prompts, captions, features):
 
 
 optimizer = torch.optim.AdamW([
-    {"params": mlp.parameters(),       "lr": 1e-4},
-    {"params": llm.model.parameters(), "lr": 2e-5},
-], weight_decay=0.05)
+    {"params": mlp.parameters(),       "lr": 1e-4, "weight_decay": 0.01},
+    {"params": llm.model.parameters(), "lr": 2e-5, "weight_decay": 0.0},
+])
 
 total_steps = len(train_load) * c.num_epochs
-scheduler = get_cosine_schedule_with_warmup(
-    optimizer,
-    num_warmup_steps=int(0.05 * total_steps),
-    num_training_steps=total_steps
-)
+# scheduler = get_cosine_schedule_with_warmup(
+#     optimizer,
+#     num_warmup_steps=int(0.05 * total_steps),
+#     num_training_steps=total_steps
+# )
 
 
 
@@ -126,10 +127,16 @@ for e in range(c.num_epochs):
         # mlp_loss.backward()
         mimir_loss.backward()
         optimizer.step()
-        scheduler.step()
+        # scheduler.step()
         optimizer.zero_grad()
-        print(f"{e+1:>6} | {batch_num+1:>6} | {mimir_loss.item():>8.4f}")
-        log_row(e + 1, batch_num + 1, mimir_loss.item(), "", scheduler.get_last_lr()[0])
+        
+        running_loss += mimir_loss.item()
+
+        if (batch_num + 1) % LOG_EVERY == 0:
+            avg = running_loss / LOG_EVERY
+            print(f"{e+1:>6} | {batch_num+1:>6} | {avg:>8.4f}")
+            log_row(e + 1, batch_num + 1, avg, "") #, scheduler.get_last_lr()[0])
+            running_loss = 0.0
 
     llm.model.eval()
     mlp.eval()
