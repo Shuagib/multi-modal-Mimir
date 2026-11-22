@@ -1,4 +1,7 @@
-def val_loss(llm, mlp, eval_load, shuffle, shuffle=False, n_batches=50):
+import torch
+from pipeline.training.build_batch import build_batch
+
+def val_loss(llm, mlp, eval_load, c, shuffle=False, n_batches=50):
     llm.model.eval()
     mlp.eval()
     total, n = 0.0, 0
