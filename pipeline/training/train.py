@@ -98,7 +98,8 @@ for e in range(c.num_epochs):
 
         mimir_loss.backward()
         # torch.nn.utils.clip_grad_norm_(list(mlp.parameters()) + list(llm.model.parameters()), 1.0)
-
+        torch.nn.utils.clip_grad_norm_(mlp.parameters(), 1.0)
+        torch.nn.utils.clip_grad_norm_(llm.model.parameters(), 1.0)
         
         if (batch_num + 1) % LOG_EVERY == 0:
                     g_mlp = sum(p.grad.norm()**2 for p in mlp.parameters() if p.grad is not None)**0.5
