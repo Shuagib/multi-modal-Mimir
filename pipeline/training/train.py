@@ -95,7 +95,8 @@ for e in range(c.epochs):
         # Mimir loss
         features = batch["features"].to(device).float()
         inputs, attention_mask, labels, token_type_ids = build_batch(batch["prompt"], batch["caption"], features)
-        mimir_loss = llm.model(inputs_embeds=inputs, attention_mask=attention_mask,
+        with torch.autocast("cuda", dtype=torch.bfloat16):
+            mimir_loss = llm.model(inputs_embeds=inputs, attention_mask=attention_mask,
                                labels=labels, token_type_ids=token_type_ids).loss
 
         # mlp_loss.backward()
