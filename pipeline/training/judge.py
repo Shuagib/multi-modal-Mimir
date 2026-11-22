@@ -43,12 +43,12 @@ def judge_val(llm, mlp,eval_data, config):
     with torch.no_grad():
         for i in range(JUDGE_N):
             s = eval_data[i]
-            features = torch.as_tensor(s["features"]).unsqueeze(0).to(config.device)
+            features = torch.as_tensor(s["features"]).unsqueeze(0).to(config.device).float()
             prompt_ids = llm.tokenizer.apply_chat_template(
                 [{"role": "user", "content": s["prompt"]}],
                 add_generation_prompt=True, return_tensors="pt")["input_ids"].to(config.device)
             text = llm.embedding(prompt_ids)
-            inputs = torch.cat([mlp(features).to(text.dtype), text], dim=1).float()
+            inputs = torch.cat([mlp(features).to(text.dtype), text], dim=1)
             gen = llm.generate_and_decode(inputs, max_new_tokens=300)       
             a, c = judge_score(s["captions"], gen, config)
             if a is not None: accuracies.append(a)
