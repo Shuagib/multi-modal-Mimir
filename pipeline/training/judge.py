@@ -48,9 +48,9 @@ def judge_val(llm, mlp,eval_data, config):
                 [{"role": "user", "content": s["prompt"]}],
                 add_generation_prompt=True, return_tensors="pt")["input_ids"].to(config.device)
             text = llm.embedding(prompt_ids)
-            inputs = torch.cat([mlp(features).to(text.dtype), text], dim=1)
+            inputs = torch.cat([mlp(features).to(text.dtype), text], dim=1).float()
             gen = llm.generate_and_decode(inputs, max_new_tokens=300)       
-            a, c = judge_score(s["captions"], config)
+            a, c = judge_score(s["captions"], gen, config)
             if a is not None: accuracies.append(a)
             if c is not None: coverages.append(c)
     llm.model.train()
