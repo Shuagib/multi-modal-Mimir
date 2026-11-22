@@ -28,10 +28,10 @@ coverage: <1-10>
 
 def judge_score(ref: str, gen: str, config):
     messages = [{"role": "user", "content": JUDGE_PROMPT.format(reference=ref, generation=gen)}]
-    ids =  judge_tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt").to(config.device)
-    with torch.no_grad:
+    ids =  judge_tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt")["input_ids"].to(config.device)
+    with torch.no_grad():
         out = judge.generate(ids, max_new_tokens=20, do_sample=False)
-    text = judge_tokenizer.decode(out[0, ids.shape[0]:], skip_special_tokens=True)
+    text = judge_tokenizer.decode(out[0, ids.shape[1]:], skip_special_tokens=True)
     accuracy = re.search(r"accuracy:\s*(\d+)", text)
     coverage = re.search(r"coverage:\s*(\d+)", text)
     return (int(accuracy.group(1)) if accuracy else None, int(coverage.group(1)) if coverage else None)
@@ -50,9 +50,10 @@ def judge_val(llm, mlp,eval_data, config):
             text = llm.embedding(prompt_ids)
             inputs = torch.cat([mlp(features).to(text.dtype), text], dim=1)
             gen = llm.generate_and_decode(inputs, max_new_tokens=300)       
-            a, c = judge_score(s["captions"], gen, config)
-            if a is not None: accuracies.append(a)
-            if c is not None: coverages.append(c)
+            acc, cov = judge_score(s["caption"], gen, config)
+            if acc is not None: accuracies.append(acc)
+            if cov is not None: coverages.append(cov)
     llm.model.train()
     mlp.train()
-    return sum(accuracies)/len(accuracies), sum(coverages)/len(coverages)
+    avg = lambda xs: sum(xs) / len(xs) if xs else float("nan")
+    return avg(accuracies), avg(coverages)
