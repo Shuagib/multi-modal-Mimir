@@ -11,10 +11,12 @@ from pipeline.training.config import ProjectorTrainConfig
 from pipeline.training.feature_dataset import FeatureDataset
 from projector.two_layer_mlp import MLP
 from vision_model.model import SigLIP2
+from pipeline.training.build_batch import build_batch
 #from transformers import get_cosine_schedule_with_warmup
 from torch.optim.lr_scheduler import LambdaLR
 
-
+from pipeline.training.tests.image_gap import image_gap
+from pipeline.training.tests.val_loss import val_loss
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger("train")
@@ -46,57 +48,6 @@ eval_load = loader(eval_data)
 # print("token_type_ids" in inspect.signature(llm.model.forward).parameters)
 
 print(f"running {c.num_epochs} epocs")
-
-def build_batch(prompts, captions, features):
-    B = features.shape[0]
-    seqs, label_seqs = [], []
-    for p, cap in zip(prompts, captions):
-        p_ids = llm.tokenizer.apply_chat_template(
-                    [{"role": "user", "content": p}],
-                    add_generation_prompt=True)["input_ids"]
-        c_ids = llm.tokenizer(cap + llm.tokenizer.eos_token, add_special_tokens=False).input_ids
-        seqs.append(p_ids + c_ids)
-        label_seqs.append([-100] * len(p_ids) + c_ids)
-
-    L = max(map(len,seqs))
-    pad = llm.tokenizer.pad_token_id
-    ids = torch.tensor([s + [pad] * (L - len(s)) for s in seqs], device=c.device)
-    text_mask = torch.tensor([[1] * len(s) + [0] * (L - len(s)) for s in seqs], device=c.device)
-    text_labels = torch.tensor([s + [-100] * (L - len(s)) for s in label_seqs], device=c.device)
-
-    n_head = 4
-    text = llm.embedding(ids)
-    img = mlp(features).to(text.dtype)
-    n_img = img.shape[1]
-
-    
-    inputs = torch.cat([text[:, :n_head], img, text[:, n_head:]], dim=1)
-    ones = torch.ones(B, n_img, dtype=torch.long, device=c.device)
-    attention_mask = torch.cat([text_mask[:, :n_head], ones, text_mask[:, n_head:]], dim=1)
-    no_loss = torch.full((B, n_img), -100, device=c.device)
-    labels = torch.cat([text_labels[:, :n_head], no_loss, text_labels[:, n_head:]], dim=1)
-    
-    # indicator matrix for mimir
-    token_type_ids = torch.zeros_like(attention_mask)
-    token_type_ids[:, n_head:n_head + n_img] = 1
-
-    return inputs, attention_mask, labels, token_type_ids
-
-def val_loss(shuffle=False, n_batches=50):
-    llm.model.eval(); mlp.eval()
-    total, n = 0.0, 0
-    with torch.no_grad():
-        for i, batch in enumerate(eval_load):
-            if i >= n_batches: break
-            f = batch["features"].to(c.device).float()
-            if shuffle:
-                f = f.roll(1, dims=0)
-            inputs, am, labels, tti = build_batch(batch["prompt"], batch["caption"], f)
-            total += llm.model(inputs_embeds=inputs, attention_mask=am,
-                               labels=labels, token_type_ids=tti).loss.item()
-            n += 1
-    llm.model.train(); mlp.train()
-    return total / n
 
 optimizer = torch.optim.AdamW([
     {"params": mlp.parameters(),       "lr": 1e-4, "weight_decay": 0.01},
@@ -139,14 +90,14 @@ for e in range(c.num_epochs):
     for batch_num, batch in enumerate(train_load):
        
         features = batch["features"].to(c.device).float()
-        inputs, attention_mask, labels, token_type_ids = build_batch(batch["prompt"], batch["caption"], features)
+        inputs, attention_mask, labels, token_type_ids = build_batch(batch["prompt"], batch["caption"], features, llm, mlp)
         # with torch.autocast("cuda", dtype=torch.bfloat16):
         # Mimir loss
         mimir_loss = llm.model(inputs_embeds=inputs, attention_mask=attention_mask,
                                labels=labels, token_type_ids=token_type_ids).loss
 
         mimir_loss.backward()
-        torch.nn.utils.clip_grad_norm_(list(mlp.parameters()) + list(llm.model.parameters()), 1.0)
+        # torch.nn.utils.clip_grad_norm_(list(mlp.parameters()) + list(llm.model.parameters()), 1.0)
 
         
         if (batch_num + 1) % LOG_EVERY == 0:
@@ -182,8 +133,7 @@ for e in range(c.num_epochs):
 
     avg_val = val_total / len(eval_load)
 
-    v_ok = val_loss()
-    v_shuffle = val_loss(shuffle=True)
+    v_ok, v_shuffle = image_gap()
     print(f"epoch {e+1}/{c.num_epochs} │ val correct {v_ok:.4f} │ val shuffled {v_shuffle:.4f} │ gap {v_shuffle - v_ok:.4f}")
     
     with torch.no_grad():
