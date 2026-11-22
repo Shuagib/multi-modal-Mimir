@@ -1,0 +1,169 @@
+nohup: ignoring input
+Loading weights:   0%|          | 0/208 [00:00<?, ?it/s]Loading weights: 100%|██████████| 208/208 [00:00<00:00, 26501.88it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+INFO:extract:seen 64, kept 60 (94% ok)
+INFO:extract:seen 128, kept 118 (92% ok)
+INFO:extract:seen 192, kept 174 (91% ok)
+INFO:extract:eval shard 00000: 200 samples
+INFO:extract:seen 256, kept 234 (91% ok)
+/work/mimir/multi-modal-Mimir/.venv/lib/python3.14/site-packages/PIL/Image.py:1134: UserWarning: Palette images with Transparency expressed in bytes should be converted to RGBA images
+  warnings.warn(
+INFO:extract:seen 320, kept 295 (92% ok)
+INFO:extract:seen 384, kept 350 (91% ok)
+INFO:extract:seen 448, kept 410 (92% ok)
+INFO:extract:seen 512, kept 469 (92% ok)
+INFO:extract:seen 576, kept 528 (92% ok)
+INFO:extract:train shard 00000: 200 samples
+INFO:extract:seen 640, kept 585 (91% ok)
+INFO:extract:seen 704, kept 642 (91% ok)
+INFO:extract:seen 768, kept 699 (91% ok)
+INFO:extract:train shard 00001: 200 samples
+INFO:extract:seen 832, kept 753 (91% ok)
+INFO:extract:seen 896, kept 810 (90% ok)
+INFO:extract:seen 960, kept 871 (91% ok)
+INFO:extract:seen 1024, kept 928 (91% ok)
+INFO:extract:train shard 00002: 200 samples
+INFO:extract:seen 1088, kept 987 (91% ok)
+INFO:extract:seen 1152, kept 1045 (91% ok)
+INFO:extract:seen 1216, kept 1100 (90% ok)
+INFO:extract:train shard 00003: 200 samples
+INFO:extract:seen 1280, kept 1158 (90% ok)
+INFO:extract:seen 1344, kept 1220 (91% ok)
+INFO:extract:seen 1408, kept 1277 (91% ok)
+INFO:extract:train shard 00004: 200 samples
+INFO:extract:seen 1472, kept 1336 (91% ok)
+INFO:extract:seen 1536, kept 1395 (91% ok)
+INFO:extract:seen 1600, kept 1452 (91% ok)
+INFO:extract:seen 1664, kept 1507 (91% ok)
+INFO:extract:train shard 00005: 200 samples
+INFO:extract:seen 1728, kept 1568 (91% ok)
+INFO:extract:seen 1792, kept 1627 (91% ok)
+INFO:extract:seen 1856, kept 1686 (91% ok)
+INFO:extract:train shard 00006: 200 samples
+INFO:extract:seen 1920, kept 1742 (91% ok)
+INFO:extract:seen 1984, kept 1797 (91% ok)
+INFO:extract:seen 2048, kept 1856 (91% ok)
+INFO:extract:seen 2112, kept 1908 (90% ok)
+INFO:extract:train shard 00007: 200 samples
+INFO:extract:seen 2176, kept 1972 (91% ok)
+INFO:extract:seen 64, kept 61 (95% ok)
+INFO:extract:eval shard 00001: 200 samples
+INFO:extract:seen 128, kept 125 (98% ok)
+INFO:extract:seen 192, kept 186 (97% ok)
+INFO:extract:seen 256, kept 248 (97% ok)
+INFO:extract:eval shard 00002: 200 samples
+INFO:extract:seen 320, kept 309 (97% ok)
+INFO:extract:seen 384, kept 371 (97% ok)
+INFO:extract:seen 448, kept 434 (97% ok)
+INFO:extract:train shard 00008: 200 samples
+INFO:extract:seen 512, kept 498 (97% ok)
+INFO:extract:seen 576, kept 562 (98% ok)
+INFO:extract:seen 640, kept 622 (97% ok)
+INFO:extract:train shard 00009: 200 samples
+INFO:extract:seen 704, kept 684 (97% ok)
+INFO:extract:seen 768, kept 748 (97% ok)
+INFO:extract:seen 832, kept 810 (97% ok)
+INFO:extract:train shard 00010: 200 samples
+INFO:extract:seen 896, kept 872 (97% ok)
+INFO:extract:seen 960, kept 935 (97% ok)
+INFO:extract:seen 1024, kept 997 (97% ok)
+INFO:extract:seen 1088, kept 1055 (97% ok)
+INFO:extract:train shard 00011: 200 samples
+INFO:extract:seen 1152, kept 1108 (96% ok)
+INFO:extract:seen 1216, kept 1169 (96% ok)
+INFO:extract:seen 1280, kept 1227 (96% ok)
+INFO:extract:train shard 00012: 200 samples
+INFO:extract:seen 1344, kept 1283 (95% ok)
+INFO:extract:seen 1408, kept 1339 (95% ok)
+INFO:extract:seen 1472, kept 1386 (94% ok)
+INFO:extract:seen 1536, kept 1403 (91% ok)
+INFO:extract:seen 1600, kept 1424 (89% ok)
+INFO:extract:seen 1664, kept 1441 (87% ok)
+INFO:extract:seen 1728, kept 1465 (85% ok)
+INFO:extract:train shard 00013: 200 samples
+INFO:extract:seen 1792, kept 1479 (83% ok)
+INFO:extract:seen 1856, kept 1498 (81% ok)
+INFO:extract:seen 1920, kept 1520 (79% ok)
+INFO:extract:seen 1984, kept 1537 (77% ok)
+INFO:extract:seen 2048, kept 1558 (76% ok)
+INFO:extract:seen 2112, kept 1569 (74% ok)
+INFO:extract:seen 2176, kept 1588 (73% ok)
+INFO:extract:seen 2240, kept 1607 (72% ok)
+INFO:extract:seen 2304, kept 1622 (70% ok)
+INFO:extract:seen 2368, kept 1630 (69% ok)
+INFO:extract:seen 2432, kept 1643 (68% ok)
+INFO:extract:seen 2496, kept 1664 (67% ok)
+INFO:extract:train shard 00014: 200 samples
+INFO:extract:seen 2560, kept 1688 (66% ok)
+INFO:extract:seen 2624, kept 1706 (65% ok)
+INFO:extract:seen 2688, kept 1722 (64% ok)
+INFO:extract:seen 2752, kept 1738 (63% ok)
+INFO:extract:seen 2816, kept 1753 (62% ok)
+INFO:extract:seen 2880, kept 1770 (61% ok)
+INFO:extract:seen 2944, kept 1783 (61% ok)
+INFO:extract:seen 3008, kept 1800 (60% ok)
+INFO:extract:seen 3072, kept 1820 (59% ok)
+INFO:extract:seen 3136, kept 1836 (59% ok)
+INFO:extract:seen 3200, kept 1859 (58% ok)
+INFO:extract:train shard 00015: 200 samples
+INFO:extract:seen 3264, kept 1876 (57% ok)
+INFO:extract:seen 3328, kept 1895 (57% ok)
+INFO:extract:seen 3392, kept 1907 (56% ok)
+INFO:extract:seen 3456, kept 1927 (56% ok)
+INFO:extract:seen 3520, kept 1947 (55% ok)
+INFO:extract:seen 3584, kept 1962 (55% ok)
+INFO:extract:seen 3648, kept 1982 (54% ok)
+INFO:extract:seen 64, kept 54 (84% ok)
+INFO:extract:seen 128, kept 104 (81% ok)
+INFO:extract:eval shard 00003: 200 samples
+INFO:extract:seen 192, kept 164 (85% ok)
+INFO:extract:seen 256, kept 208 (81% ok)
+INFO:extract:seen 320, kept 261 (82% ok)
+INFO:extract:seen 384, kept 312 (81% ok)
+INFO:extract:seen 448, kept 361 (81% ok)
+INFO:extract:train shard 00016: 200 samples
+INFO:extract:seen 512, kept 407 (79% ok)
+INFO:extract:seen 576, kept 453 (79% ok)
+INFO:extract:seen 640, kept 494 (77% ok)
+INFO:extract:seen 704, kept 544 (77% ok)
+INFO:extract:seen 768, kept 594 (77% ok)
+INFO:extract:train shard 00017: 200 samples
+INFO:extract:seen 832, kept 633 (76% ok)
+INFO:extract:seen 896, kept 688 (77% ok)
+INFO:extract:seen 960, kept 749 (78% ok)
+INFO:extract:train shard 00018: 200 samples
+INFO:extract:seen 1024, kept 801 (78% ok)
+INFO:extract:seen 1088, kept 849 (78% ok)
+INFO:extract:seen 1152, kept 906 (79% ok)
+INFO:extract:seen 1216, kept 966 (79% ok)
+INFO:extract:train shard 00019: 200 samples
+INFO:extract:seen 1280, kept 1018 (80% ok)
+INFO:extract:seen 1344, kept 1073 (80% ok)
+INFO:extract:seen 1408, kept 1119 (79% ok)
+INFO:extract:seen 1472, kept 1173 (80% ok)
+INFO:extract:train shard 00020: 200 samples
+INFO:extract:seen 1536, kept 1233 (80% ok)
+INFO:extract:seen 1600, kept 1284 (80% ok)
+INFO:extract:seen 1664, kept 1339 (80% ok)
+INFO:extract:seen 1728, kept 1388 (80% ok)
+INFO:extract:train shard 00021: 200 samples
+INFO:extract:seen 1792, kept 1444 (81% ok)
+INFO:extract:seen 1856, kept 1488 (80% ok)
+INFO:extract:seen 1920, kept 1542 (80% ok)
+INFO:extract:seen 1984, kept 1592 (80% ok)
+INFO:extract:train shard 00022: 200 samples
+INFO:extract:seen 2048, kept 1640 (80% ok)
+INFO:extract:seen 2112, kept 1675 (79% ok)
+INFO:extract:seen 2176, kept 1726 (79% ok)
+INFO:extract:seen 2240, kept 1780 (79% ok)
+INFO:extract:train shard 00023: 200 samples
+INFO:extract:seen 2304, kept 1836 (80% ok)
+INFO:extract:seen 2368, kept 1891 (80% ok)
+INFO:extract:seen 2432, kept 1940 (80% ok)
+INFO:extract:seen 2496, kept 1981 (79% ok)
+INFO:extract:train shard 00024: 200 samples
+INFO:extract:train shard 00025: 1 samples
+INFO:extract:eval shard 00004: 199 samples
+/home/ucloud/.local/share/uv/python/cpython-3.14.10-linux-x86_64-gnu/lib/python3.14/multiprocessing/resource_tracker.py:475: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown: {'/mp-cfnq36ri'}
+  warnings.warn(
