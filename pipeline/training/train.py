@@ -166,12 +166,6 @@ for e in range(c.num_epochs):
             log_row(e + 1, batch_num + 1, avg, "") #, scheduler.get_last_lr()[0])
             running_loss = 0.0
 
-            avg_val = val_total / len(eval_load)
-
-    v_ok = val_loss()
-    v_shuffle = val_loss(shuffle=True)
-    print(f"epoch {e+1}/{c.num_epochs} │ val correct {v_ok:.4f} │ val shuffled {v_shuffle:.4f} │ gap {v_shuf - v_ok:.4f}")
-
         # if batch_num >= max_batch:
         #     break
 
@@ -188,11 +182,18 @@ for e in range(c.num_epochs):
 
     avg_val = val_total / len(eval_load)
 
+    v_ok = val_loss()
+    v_shuffle = val_loss(shuffle=True)
+    print(f"epoch {e+1}/{c.num_epochs} │ val correct {v_ok:.4f} │ val shuffled {v_shuffle:.4f} │ gap {v_shuf - v_ok:.4f}")
+    
+
     from pipeline.training.judge import judge_val
     acc, cov = judge_val(llm, mlp, eval_data, c)
     print(f"epoch {e+1}/{c.num_epochs} │ val loss {avg_val:.4f} │ judge accuracy {acc:.2f} │ coverage {cov:.2f}")    
     log_row(e + 1, "", "", avg_val, "", acc, cov)
     print("─" * len(header))
+    
+    
 
 vm = SigLIP2(model_name=c.vision_model_name, device=c.device)
 
