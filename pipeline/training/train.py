@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger("train")
 
 c = ProjectorTrainConfig()
-LOG_EVERY = 1
+LOG_EVERY = 100
 running_loss = 0.0
 max_batch = 10
 
@@ -118,8 +118,8 @@ for e in range(c.num_epochs):
             log_row(e + 1, batch_num + 1, avg, "") #, scheduler.get_last_lr()[0])
             running_loss = 0.0
         
-        if batch_num >= max_batch:
-            break
+        # if batch_num >= max_batch:
+        #     break
 
     llm.model.eval()
     mlp.eval()
