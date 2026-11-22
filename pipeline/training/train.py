@@ -152,7 +152,8 @@ for e in range(c.num_epochs):
 
     from pipeline.training.judge import judge_val
     acc, cov = judge_val(llm, mlp, eval_data, c)
-    print(f"epoch {e+1}/{c.num_epochs} │ val loss {avg_val:.4f} │ judge accuracy {acc:.2f} │ coverage {cov:.2f}")    log_row(e + 1, "", "", avg_val, "", acc, cov)
+    print(f"epoch {e+1}/{c.num_epochs} │ val loss {avg_val:.4f} │ judge accuracy {acc:.2f} │ coverage {cov:.2f}")    
+    log_row(e + 1, "", "", avg_val, "", acc, cov)
     print("─" * len(header))
 
 vm = SigLIP2(model_name=c.vision_model_name, device=c.device)
