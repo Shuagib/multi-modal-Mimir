@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-
+import torch
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -15,6 +15,8 @@ class ProjectorTrainConfig:
     dataset_name: str = "allenai/pixmo-cap"
     dataset_split: str = "train"
     max_samples: int | None = 20_000
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
     instruction: str = "Describe the image."
 
