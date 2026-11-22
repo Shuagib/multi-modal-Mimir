@@ -32,6 +32,7 @@ class ProjectorTrainConfig:
 
     image_cache_dir: Path = PROJECT_ROOT / "data" / "image_cache"
     log_dir: Path = PROJECT_ROOT / "pipeline" / "training" / "logs"
+    checkpoint_dir = Path = PROJECT_ROOT / "pipeline" / "training" / "model_saves"
     train_dir: Path = PROJECT_ROOT / "data" / "train"
     eval_dir: Path = PROJECT_ROOT / "data" / "eval"
 
