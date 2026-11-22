@@ -7,7 +7,7 @@ c = ProjectorTrainConfig()
 
 JUDGE_NAME = "Qwen/Qwen2.5-7B-instruct"
 judge_tokenizer = AutoTokenizer.from_pretrained(JUDGE_NAME)
-judge = AutoModelForCausalLM.from_pretrained(JUDGE_NAME, torch_dtype=torch.bfloat16).to(c.device).eval()
+judge = AutoModelForCausalLM.from_pretrained(JUDGE_NAME, dtype=torch.bfloat16).to(c.device).eval()
 
 JUDGE_N = 50
 
