@@ -9,6 +9,7 @@ dependencies = [
     "datasets>=5.1.0",
     "matplotlib>=3.11.2",
     "numpy>=2.5.4",
+    "peft>=0.22.0",
     "pillow>=13.0.0",
     "requests>=2.34.2",
     "torch>=2.14.1",
