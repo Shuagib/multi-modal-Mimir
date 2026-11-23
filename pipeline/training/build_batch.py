@@ -1,8 +1,9 @@
 import torch
 
+
 def build_batch(prompts, captions, features, llm, mlp, c):
     B = features.shape[0]
-    seqs, label_seqs = [], []
+    seqs, label_seqs, p_lens = [], [], []
     for p, cap in zip(prompts, captions):
         p_ids = llm.tokenizer.apply_chat_template(
                     [{"role": "user", "content": p}],
@@ -10,7 +11,10 @@ def build_batch(prompts, captions, features, llm, mlp, c):
         c_ids = llm.tokenizer(cap + llm.tokenizer.eos_token, add_special_tokens=False).input_ids
         seqs.append(p_ids + c_ids)
         label_seqs.append([-100] * len(p_ids) + c_ids)
+        p_lens.append(len(p_ids))
 
+    assert llm.tokenizer.convert_ids_to_tokens(p_ids[:4]) == ['<bos>', '<|turn>', 'user', '\n']
+    
     L = max(map(len,seqs))
     pad = llm.tokenizer.pad_token_id
     ids = torch.tensor([s + [pad] * (L - len(s)) for s in seqs], device=c.device)
@@ -31,6 +35,7 @@ def build_batch(prompts, captions, features, llm, mlp, c):
     
     # indicator matrix for mimir
     token_type_ids = torch.zeros_like(attention_mask)
-    token_type_ids[:, n_head:n_head + n_img] = 1
+    for i, pl in enumerate(p_lens):
+        token_type_ids[i, :pl + n_img] = 1
 
     return inputs, attention_mask, labels, token_type_ids

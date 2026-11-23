@@ -1,19 +1,24 @@
+import argparse
+import io
+import json
+import logging
 import os
-import argparse, io, json, logging
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from datasets import load_dataset
+from typing import NamedTuple
+
 import numpy as np
 import requests
 import torch
-from PIL import Image, UnidentifiedImageError
-from vision_model.model import SigLIP2
-from typing import NamedTuple
-from collections.abc import Callable
-
 
 ### LOGGING
 import transformers
+from datasets import load_dataset
+from PIL import Image, UnidentifiedImageError
+
+from vision_model.model import SigLIP2
+
 transformers.logging.set_verbosity_error()
 
 logging.basicConfig(level=logging.WARNING) # print info/warning/error
@@ -59,7 +64,7 @@ CAPACITY = {
 
 def quotas(total: int, capacities: dict[str, int]) -> dict[str, int]:
         """Split total evenly; sources that run out give their remainder to the others."""
-        q, left, open_ = {}, total, dict(capacities)
+        q, left, open_ = {k: 0 for k in capacities}, total, dict(capacities)
         while open_ and left > 0:
             share = left // len(open_)
             small = {k: v for k, v in open_.items() if v <= share}

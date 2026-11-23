@@ -3,20 +3,21 @@ from pathlib import Path
 
 import torch
 from PIL import Image
-from torch.utils.data import DataLoader
 
 # from transformers import get_constant_schedule_with_warmup
+# from transformers import get_cosine_schedule_with_warmup
+from torch.optim.lr_scheduler import LambdaLR
+from torch.utils.data import DataLoader
+
 from language_model.mimir import Mimir
+from pipeline.training.build_batch import build_batch
 from pipeline.training.config import ProjectorTrainConfig
 from pipeline.training.feature_dataset import FeatureDataset
+from pipeline.training.tests.image_gap import image_gap
 from projector.two_layer_mlp import MLP
 from vision_model.model import SigLIP2
-from pipeline.training.build_batch import build_batch
-#from transformers import get_cosine_schedule_with_warmup
-from torch.optim.lr_scheduler import LambdaLR
 
-from pipeline.training.tests.image_gap import image_gap
-from pipeline.training.tests.val_loss import val_loss
+#from pipeline.training.tests.val_loss import val_loss
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger("train")
@@ -76,7 +77,9 @@ header = f"{'epoch':>6} │ {'batch':>6} │ {'loss':>8}"
 print(header)
 print("─" * len(header))
 
-import csv, time
+import csv
+import time
+
 log_path = c.log_dir / f"log_{time.strftime('%Y%m%d-%H%M%S')}.csv"
 log_path.parent.mkdir(parents=True, exist_ok=True)
 with open(log_path, "w", newline="") as f:
