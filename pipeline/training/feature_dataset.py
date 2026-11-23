@@ -7,7 +7,7 @@ from torch.utils.data import Dataset
 
 class FeatureDataset(Dataset):
     """Precomputed SigLIP2 feature + captions from extract_vm_features.py."""
-    def __init__(self, shard_dir: Path) -> None:
+    def __init__(self, shard_dir: Path, max_samples: int | None = None) -> None:
         self.shard_dir = Path(shard_dir)
         self.feature_files = sorted(self.shard_dir.glob("features-*.npy"))
         if not self.feature_files:
@@ -17,6 +17,8 @@ class FeatureDataset(Dataset):
         self.offsets: list[int] = []
         self.total = 0 
         self.init_feature_files()
+        if max_samples is not None:
+            self.total = min(self.total, max_samples)
         self._open: dict[int, np.ndarray] = {}
 
     def __len__(self) -> int:

@@ -2,7 +2,7 @@ import os
 import argparse, io, json, logging
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-
+from datasets import load_dataset
 import numpy as np
 import requests
 import torch
@@ -49,6 +49,28 @@ SOURCES = {
     "pixmo-count":  Source("allenai/pixmo-count",  "train", "image_url", _count),
     "pixmo-cap-qa": Source("allenai/pixmo-cap-qa", "train", "image_url", _cap_qa),
 }
+
+# approximate rows per source (row count minus some failed downloads)
+CAPACITY = {
+    "pixmo-cap":    500_000,
+    "pixmo-count":   15_000,
+    "pixmo-cap-qa": 150_000,
+}
+
+def quotas(total: int, capacities: dict[str, int]) -> dict[str, int]:
+        """Split total evenly; sources that run out give their remainder to the others."""
+        q, left, open_ = {}, total, dict(capacities)
+        while open_ and left > 0:
+            share = left // len(open_)
+            small = {k: v for k, v in open_.items() if v <= share}
+            if not small:
+                for k in open_: q[k] = share
+                break
+            for k, v in small.items():
+                q[k] = v
+                left -= v
+                del open_[k]
+        return q
 
 # feature extraction pipeline
 
@@ -110,14 +132,13 @@ class ShardWriter:
         self.buffer = []
         self.current_shard_id += 1
 
-def extract_source(name, src, args, vm, device, pool, train_writer, eval_writer, images_dir):
-    from datasets import load_dataset
+def extract_source(name, src, args, vm, device, pool, train_writer, eval_writer, test_writer, images_dir, train_q, eval_q, test_q):
+    train_n=train_q[name]
+    eval_n=eval_q[name]
+    test_n = test_q[name]
+
     stream = load_dataset(src.hf_path, split=src.split, streaming=True)
     kept, seen, batch_rows = 0, 0, []
-
-    k = len(args.sources)
-
-    local_train_n, local_eval_n = args.n // k, args.eval_n // k
 
     for row in stream:
         seen += 1
@@ -138,15 +159,20 @@ def extract_source(name, src, args, vm, device, pool, train_writer, eval_writer,
         output = output.cpu().numpy().astype(np.float16)
 
         for feature, s in zip(output, samples):
-            writer = eval_writer if kept < local_eval_n else train_writer
+            if kept < eval_n:
+                writer = eval_writer
+            elif kept < eval_n + test_n:
+                writer = test_writer
+            else:
+                writer = train_writer
             if writer is eval_writer and args.save_eval_images:
                 s.image.save(images_dir / f"{name}-{kept:05d}.jpg", "JPEG", quality=92)
             
             writer.add(feature, s.prompt, s.caption, s.url) # append to buffer and flush if full
             kept += 1
-            if kept >= local_train_n:
+            if kept >= eval_n + test_n + train_n:
                 break
-        if kept >= local_train_n:
+        if kept >= eval_n + test_n + train_n:
             break
         log.info("seen %d, kept %d (%.0f%% ok)", seen, kept, 100 * kept / seen)
 
@@ -159,16 +185,26 @@ def main() -> None:
     ap.add_argument("--workers", type=int, default=32) # concurrent HTTP downloads (network)
     ap.add_argument("--model", default="google/siglip2-base-patch16-256") # encoder model
     ap.add_argument("--eval-n", type=int, default=2000) # number of eval images
+    ap.add_argument("--test-n", type=int, default=100) # small held-out test set
     ap.add_argument("--save-eval-images", action="store_true") # save the images for eval
     ap.add_argument("--sources", nargs="+", default=list(SOURCES), choices=list(SOURCES))
 
     args = ap.parse_args()
+
+    caps = {name: CAPACITY[name] for name in args.sources}
+    train_q = quotas(args.n, caps)
+    eval_q = quotas(args.eval_n, caps)
+    test_q = quotas(args.test_n, caps)
+
+    log.info("train quotas: %s | eval quotas: %s | test quotas: %s", train_q, eval_q, test_q)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
     vm = SigLIP2(model_name=args.model, device=device)    
 
     train_writer = ShardWriter(out_dir=args.out / "train", shard_size=args.shard_size, pipeline_mode="train")
     eval_writer = ShardWriter(out_dir=args.out / "eval", shard_size=args.shard_size, pipeline_mode="eval")
+    test_writer = ShardWriter(out_dir=args.out / "test", shard_size=args.shard_size, pipeline_mode="test")
+
     images_dir = args.out / "eval" / "images"
 
     if args.save_eval_images:   
@@ -186,11 +222,16 @@ def main() -> None:
                 pool=pool,
                 train_writer=train_writer,
                 eval_writer=eval_writer,
-                images_dir=images_dir
+                test_writer=test_writer,
+                images_dir=images_dir,
+                train_q=train_q,
+                eval_q=eval_q,
+                test_q=test_q
                 )
 
     train_writer.flush()
     eval_writer.flush()
+    test_writer.flush()
 
 if __name__ == "__main__":
     main()
