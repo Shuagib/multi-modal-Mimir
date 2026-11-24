@@ -167,7 +167,7 @@ for e in range(c.num_epochs):
             avg = running_loss / LOG_EVERY
             row(e + 1, batch_num + 1, f"{avg:.4f}", f"{scheduler.get_last_lr()[0]:.1e}", "", "", "", "")
             log_row(e + 1, batch_num + 1, avg, "") #, scheduler.get_last_lr()[0])
-        
+            running_loss = 0.0
         # if batch_num >= max_batch:
         #     break
 
