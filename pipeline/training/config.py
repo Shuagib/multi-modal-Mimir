@@ -51,7 +51,7 @@ class ProjectorTrainConfig:
 
 @dataclass(frozen=True)
 class ProjectorTrainConfigHRM:
-    """Stage-1 config: train the projector only, with vision encoder and HRM Model."""
+    """Stage-1 config: train the projector only, with vision encxcoder and HRM Model."""
 
     vision_model_name: str = "google/siglip2-base-patch16-256"
     llm_model_name: str = "sapientinc/HRM-Text-1B"
