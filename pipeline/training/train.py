@@ -49,7 +49,7 @@ eval_load = loader(eval_data)
 # import inspect
 # print("token_type_ids" in inspect.signature(llm.model.forward).parameters)
 
-print(f"running {c.num_epochs} epocs")
+print(f"running {c.num_epochs} epocs with data-{c.TRAIN_COUNT}")
 
 from adam_atan2_pytorch import AdamAtan2
 
