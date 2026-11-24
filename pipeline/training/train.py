@@ -50,8 +50,6 @@ eval_load = loader(eval_data)
 # import inspect
 # print("token_type_ids" in inspect.signature(llm.model.forward).parameters)
 
-print(f"running {c.num_epochs} epocs with data-{c.TRAIN_COUNT}")
-
 from adam_atan2_pytorch import AdamAtan2
 
 optimizer = AdamAtan2(
@@ -87,7 +85,49 @@ def log_row(*row):
     with open(log_path, "a", newline="") as f:
         csv.writer(f).writerow(row)
 
+
+mlp_params = sum(p.numel() for p in mlp.parameters())
+llm_params = sum(p.numel() for p in llm.model.parameters())
+
+run_info = {
+    "data":          f"data-{c.TRAIN_COUNT}",
+    "train samples": len(train_data),
+    "eval samples":  len(eval_data),
+    "batch size":    c.batch_size,
+    "epochs":        c.num_epochs,
+    "steps/epoch":   len(train_load),
+    "total steps":   total_steps,
+    "warmup steps":  warmup,
+    "optimizer":     type(optimizer).__name__,
+    "lr":            optimizer.param_groups[0]["lr"] if not scheduler else scheduler.base_lrs[0],
+    "weight decay":  optimizer.param_groups[0].get("weight_decay"),
+    "min lr ratio":  0.1,
+    "MLP bias":      f"layer1={mlp.layer1.bias is not None}, layer2={mlp.layer2.bias is not None}",
+    "MLP params":    f"{mlp_params / 1e6:.1f}M",
+    "LLM params":    f"{llm_params / 1e6:.0f}M (all trainable)",
+    "target_rms":    c.target_rms,
+    "LLM":           c.llm_model_name,
+    "vision":        c.vision_model_name,
+    "device":        str(c.device),
+}
+
+def print_table(info: dict, title: str = "run config"):
+    kw = max(len(k) for k in info)
+    vw = max(len(str(v)) for v in info.values())
+    vw = max(vw, len(title) - kw - 3)
+
+    print(f"┌{'─' * (kw + 2)}┬{'─' * (vw + 2)}┐")
+    print(f"│ {title:<{kw + vw + 3}} │")
+    print(f"├{'─' * (kw + 2)}┼{'─' * (vw + 2)}┤")
+    for k, v in info.items():
+        print(f"│ {k:<{kw}} │ {str(v):<{vw}} │")
+    print(f"└{'─' * (kw + 2)}┴{'─' * (vw + 2)}┘")
+
+print_table(run_info)
+
+
 for e in range(c.num_epochs):
+    running_loss = 0.0
     for batch_num, batch in enumerate(train_load):
        
         features = batch["features"].to(c.device).float()
