@@ -4,7 +4,7 @@ from pipeline.training.build_batch import build_batch
 def image_gap(llm, mlp, eval_load, c, n_batches=50):
     llm.model.eval()
     mlp.eval()
-    ok_total, shuf_total, n = 0.0, 0.0, 0
+    ok_total, shuffle_total, n = 0.0, 0.0, 0
     with torch.no_grad():
         for i, batch in enumerate(eval_load):
             if i >= n_batches: break
@@ -14,8 +14,8 @@ def image_gap(llm, mlp, eval_load, c, n_batches=50):
                 inputs, am, labels, tti = build_batch(batch["prompt"], batch["caption"], ff, llm, mlp, c)
                 loss = llm.model(inputs_embeds=inputs, attention_mask=am,
                                  labels=labels, token_type_ids=tti).loss.item()
-                if shuffle: shuf_total += loss
+                if shuffle: shuffle_total += loss
                 else:       ok_total  += loss
             n += 1
     llm.model.train(); mlp.train()
-    return ok_total / n, shuf_total / n
+    return ok_total / n, shuffle_total / n

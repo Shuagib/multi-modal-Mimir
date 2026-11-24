@@ -188,8 +188,83 @@ for e in range(c.num_epochs):
 c.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 torch.save(mlp.state_dict(), c.checkpoint_dir / "mlp.pt")
 
+c.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+torch.save(llm.state_dict(), c.checkpoint_dir / "mimir.pt")
 
 
+import json
+
+test_data = FeatureDataset(c.test_dir)
+test_load = DataLoader(test_data, batch_size=c.batch_size, shuffle=False)
+
+llm.model.eval(); mlp.eval()
+
+# test loss
+test_total = 0.0
+with torch.no_grad():
+    for batch in test_load:
+        f = batch["features"].to(c.device).float()
+        inputs, am, labels, tti = build_batch(batch["prompt"], batch["caption"], f, llm, mlp, c)
+        test_total += llm.model(inputs_embeds=inputs, attention_mask=am,
+                                labels=labels, token_type_ids=tti).loss.item()
+test_loss = test_total / len(test_load)
+
+# 2. image gap on test
+t_ok, t_shuf = image_gap(llm, mlp, test_load, c, n_batches=len(test_load))
+
+# 3 + 4. generate, judge and save every test sample
+from pipeline.training.judge import judge_score
+results = []
+with torch.no_grad():
+    for i in range(len(test_data)):
+        s = test_data[i]
+        feats = torch.as_tensor(s["features"]).unsqueeze(0).to(c.device).float()
+        p_ids = llm.tokenizer.apply_chat_template(
+            [{"role": "user", "content": s["prompt"]}],
+            add_generation_prompt=True, return_tensors="pt")["input_ids"].to(c.device)
+        txt = llm.embedding(p_ids)
+        img = mlp(feats).to(txt.dtype)
+        inputs = torch.cat([txt[:, :4], img, txt[:, 4:]], dim=1)
+        gen = llm.generate_and_decode(inputs, max_new_tokens=300)
+        acc, cov = judge_score(s["caption"], gen, c)
+        results.append({"i": i, "prompt": s["prompt"], "reference": s["caption"],
+                        "generated": gen, "accuracy": acc, "coverage": cov})
+
+with open(log_path.with_name(log_path.stem + "_test.jsonl"), "w") as fh:
+    for r in results:
+        fh.write(json.dumps(r) + "\n")
+
+avg = lambda xs: sum(xs) / len(xs) if xs else float("nan")
+test_acc = avg([r["accuracy"] for r in results if r["accuracy"] is not None])
+test_cov = avg([r["coverage"] for r in results if r["coverage"] is not None])
+
+print_table({
+    "test samples":  len(test_data),
+    "test loss":     f"{test_loss:.4f}",
+    "test gap":      f"{t_shuf - t_ok:+.4f}",
+    "judge acc":     f"{test_acc:.2f}",
+    "judge cov":     f"{test_cov:.2f}",
+}, title="final test")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
 vm = SigLIP2(model_name=c.vision_model_name, device=c.device)
 
 # image_path = Path("test_images/shuggibuggidubbi.png")
@@ -222,3 +297,4 @@ with torch.no_grad():
 
         print(f"\n{'prompt:':<11}{p}")
         print(f"{'generated:':<11}{llm.generate_and_decode(inputs, max_new_tokens=300, n_head=4)}")
+"""
