@@ -17,6 +17,7 @@ from pipeline.training.feature_dataset import FeatureDataset
 from pipeline.training.tests.image_gap import image_gap
 from projector.two_layer_mlp import MLP
 from vision_model.model import SigLIP2
+from pipeline.training.judge import judge_val
 
 #from pipeline.training.tests.val_loss import val_loss
 
@@ -138,7 +139,7 @@ for e in range(c.num_epochs):
     print(f"epoch {e+1}/{c.num_epochs} │ val correct {v_ok:.4f} │ val shuffled {v_shuffle:.4f} │ gap {v_shuffle - v_ok:.4f}")
     
 
-    from pipeline.training.judge import judge_val
+    
     acc, cov = judge_val(llm, mlp, eval_data, c)
     print(f"epoch {e+1}/{c.num_epochs} │ val loss {avg_val:.4f} │ judge accuracy {acc:.2f} │ coverage {cov:.2f}")    
     log_row(e + 1, "", "", avg_val, "", acc, cov)

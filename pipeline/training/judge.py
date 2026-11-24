@@ -9,7 +9,7 @@ JUDGE_NAME = "Qwen/Qwen2.5-7B-instruct"
 judge_tokenizer = AutoTokenizer.from_pretrained(JUDGE_NAME)
 judge = AutoModelForCausalLM.from_pretrained(JUDGE_NAME, dtype=torch.bfloat16).to(c.device).eval()
 
-JUDGE_N = 50
+JUDGE_N = 10
 
 JUDGE_PROMPT = """
 You are grading an image caption against a reference description of the same image.
@@ -50,7 +50,7 @@ def judge_val(llm, mlp,eval_data, config):
             text = llm.embedding(prompt_ids)
             img = mlp(features).to(text.dtype)
             inputs = torch.cat([text[:, :4], img, text[:, 4:]], dim=1)
-            gen = llm.generate_and_decode(inputs, max_new_tokens=300, n_head=4)       
+            gen = llm.generate_and_decode(inputs, max_new_tokens=100, n_head=4)       
             acc, cov = judge_score(s["caption"], gen, config)
             if acc is not None: accuracies.append(acc)
             if cov is not None: coverages.append(cov)
