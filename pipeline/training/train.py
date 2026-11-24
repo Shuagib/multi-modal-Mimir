@@ -51,7 +51,7 @@ eval_load = loader(eval_data)
 
 print(f"running {c.num_epochs} epocs")
 
-from adam_atan2 import AdamATan2
+from adam_atan2_pytorch import AdamATan2
 
 optimizer = AdamATan2(
     list(mlp.parameters()) + list(llm.model.parameters()),
