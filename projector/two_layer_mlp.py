@@ -6,8 +6,8 @@ class MLP(nn.Module):
         super().__init__()
         #self.layer1 = nn.Linear(in_features=in_dim, out_features=hidden_dim)
         self.layer1 = nn.Linear(in_features=in_dim, out_features=hidden_dim, bias=False)
-        #self.layer2 = nn.Linear(in_features=hidden_dim, out_features=out_dim)
-        self.layer2 = nn.Linear(in_features=hidden_dim, out_features=out_dim, bias=False)
+        self.layer2 = nn.Linear(in_features=hidden_dim, out_features=out_dim)
+        #self.layer2 = nn.Linear(in_features=hidden_dim, out_features=out_dim, bias=False)
         self.act = nn.GELU()
         self.norm = nn.RMSNorm(out_dim)
         self.target_norm_scale = target_norm_scale

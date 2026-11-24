@@ -14,7 +14,7 @@ mlp = MLP(c.mlp_in_dim, c.mlp_hidden_dim, c.mlp_out_dim, c.target_rms).to(c.devi
 @torch.no_grad()
 def main():
     torch.manual_seed(0)
-    mlp.load_state_dict(torch.load(c.checkpoint_dir / "mlp_no_l2_bias.pt", map_location=c.device))
+    mlp.load_state_dict(torch.load(c.checkpoint_dir / "mlp_no_bias.pt", map_location=c.device))
     mlp.eval()
     for _ in range(10):
         i, j = torch.randperm(len(eval_data))[:2].tolist()

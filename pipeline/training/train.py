@@ -6,6 +6,7 @@ from PIL import Image
 
 # from transformers import get_constant_schedule_with_warmup
 # from transformers import get_cosine_schedule_with_warmup
+from transformers import get_cosine_with_min_lr_schedule_with_warmup
 from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.data import DataLoader
 
@@ -50,26 +51,22 @@ eval_load = loader(eval_data)
 
 print(f"running {c.num_epochs} epocs")
 
-optimizer = torch.optim.AdamW([
-    {"params": mlp.parameters(),       "lr": 1e-4, "weight_decay": 0.01},
-    {"params": llm.model.parameters(), "lr": 2e-5, "weight_decay": 0.0},
-])
+from adam_atan2 import AdamATan2
+
+optimizer = AdamATan2(
+    list(mlp.parameters()) + list(llm.model.parameters()),
+    lr=1e-5, weight_decay=0.1
+)
 
 total_steps = len(train_load) * c.num_epochs
-llm_warmup = int(0.3 * total_steps)          # 30% of training
+warmup = min(500, int(0.1 * total_steps))     # 500 steps or 10% of total
 
-# scheduler = get_cosine_schedule_with_warmup(
-#     optimizer,
-#     num_warmup_steps=int(0.05 * total_steps),
-#     num_training_steps=total_steps
-# )
-
-scheduler = LambdaLR(optimizer, lr_lambda=[
-    lambda step: 1.0,                                    # full lr from the start
-    lambda step: min(1.0, step / max(1, llm_warmup)),    # linear ramp-up
-])
-
-
+scheduler = get_cosine_with_min_lr_schedule_with_warmup(
+    optimizer,
+    num_warmup_steps=warmup,
+    num_training_steps=total_steps,
+    min_lr_rate=0.1,
+)
 
 llm.model.train()
 
