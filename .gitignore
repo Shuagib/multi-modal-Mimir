@@ -3,3 +3,5 @@ __pycache__/
 data/
 !data-1k-git/
 !data-1k-git/
+data-*/
+pipeline/training/logs/
