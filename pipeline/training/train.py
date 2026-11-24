@@ -148,11 +148,11 @@ for e in range(c.num_epochs):
         cos_out = torch.nn.functional.cosine_similarity(out[0], out[1], dim=0)
         print(f"SigLIP cos {cos_in:.3f}  MLP cos {cos_out:.3f}")
 
-    from pipeline.training.judge import judge_val
-    acc, cov = judge_val(llm, mlp, eval_data, c)
-    print(f"epoch {e+1}/{c.num_epochs} │ val loss {avg_val:.4f} │ judge accuracy {acc:.2f} │ coverage {cov:.2f}")    
-    log_row(e + 1, "", "", avg_val, "", acc, cov)
-    print("─" * len(header))
+    # from pipeline.training.judge import judge_val
+    # acc, cov = judge_val(llm, mlp, eval_data, c)
+    # print(f"epoch {e+1}/{c.num_epochs} │ val loss {avg_val:.4f} │ judge accuracy {acc:.2f} │ coverage {cov:.2f}")    
+    # log_row(e + 1, "", "", avg_val, "", acc, cov)
+    # print("─" * len(header))
     
 c.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 torch.save(mlp.state_dict(), c.checkpoint_dir / "mlp.pt")
