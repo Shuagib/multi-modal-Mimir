@@ -69,9 +69,7 @@ scheduler = get_cosine_with_min_lr_schedule_with_warmup(
 
 llm.model.train()
 
-header = f"{'epoch':>6} │ {'batch':>6} │ {'loss':>8}"
-print(header)
-print("─" * len(header))
+
 
 import csv
 import time
@@ -101,13 +99,12 @@ run_info = {
     "optimizer":     type(optimizer).__name__,
     "lr":            optimizer.param_groups[0]["lr"] if not scheduler else scheduler.base_lrs[0],
     "weight decay":  optimizer.param_groups[0].get("weight_decay"),
-    "min lr ratio":  0.1,
     "MLP bias":      f"layer1={mlp.layer1.bias is not None}, layer2={mlp.layer2.bias is not None}",
     "MLP params":    f"{mlp_params / 1e6:.1f}M",
     "LLM params":    f"{llm_params / 1e6:.0f}M (all trainable)",
     "target_rms":    c.target_rms,
     "LLM":           c.llm_model_name,
-    "vision":        c.vision_model_name,
+    "vm":        c.vision_model_name,
     "device":        str(c.device),
 }
 
@@ -125,6 +122,9 @@ def print_table(info: dict, title: str = "run config"):
 
 print_table(run_info)
 
+header = f"{'epoch':>6} │ {'batch':>6} │ {'loss':>8}"
+print(header)
+print("─" * len(header))
 
 for e in range(c.num_epochs):
     running_loss = 0.0
