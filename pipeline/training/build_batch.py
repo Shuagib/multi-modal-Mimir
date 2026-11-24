@@ -8,13 +8,13 @@ def build_batch(prompts, captions, features, llm, mlp, c):
         p_ids = llm.tokenizer.apply_chat_template(
                     [{"role": "user", "content": p}],
                     add_generation_prompt=True)["input_ids"]
-        c_ids = llm.tokenizer(cap + llm.tokenizer.eos_token, add_special_tokens=False).input_ids
+        c_ids = llm.tokenizer(cap + "<turn|>", add_special_tokens=False).input_ids
         seqs.append(p_ids + c_ids)
         label_seqs.append([-100] * len(p_ids) + c_ids)
         p_lens.append(len(p_ids))
 
     assert llm.tokenizer.convert_ids_to_tokens(p_ids[:4]) == ['<bos>', '<|turn>', 'user', '\n']
-    
+
     L = max(map(len,seqs))
     pad = llm.tokenizer.pad_token_id
     ids = torch.tensor([s + [pad] * (L - len(s)) for s in seqs], device=c.device)
