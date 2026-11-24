@@ -101,10 +101,10 @@ for e in range(c.num_epochs):
         torch.nn.utils.clip_grad_norm_(mlp.parameters(), 1.0)
         torch.nn.utils.clip_grad_norm_(llm.model.parameters(), 1.0)
         
-        if (batch_num + 1) % LOG_EVERY == 0:
-                    g_mlp = sum(p.grad.norm()**2 for p in mlp.parameters() if p.grad is not None)**0.5
-                    g_llm = sum(p.grad.norm()**2 for p in llm.model.parameters() if p.grad is not None)**0.5
-                    print(f"grad norm  mlp {g_mlp:.4f}  llm {g_llm:.4f}")
+        # if (batch_num + 1) % LOG_EVERY == 0:
+        #             g_mlp = sum(p.grad.norm()**2 for p in mlp.parameters() if p.grad is not None)**0.5
+        #             g_llm = sum(p.grad.norm()**2 for p in llm.model.parameters() if p.grad is not None)**0.5
+        #             print(f"grad norm  mlp {g_mlp:.4f}  llm {g_llm:.4f}")
 
         optimizer.step()
         scheduler.step()
@@ -137,13 +137,6 @@ for e in range(c.num_epochs):
     v_ok, v_shuffle = image_gap(llm, mlp, eval_load, c)
     print(f"epoch {e+1}/{c.num_epochs} │ val correct {v_ok:.4f} │ val shuffled {v_shuffle:.4f} │ gap {v_shuffle - v_ok:.4f}")
     
-    with torch.no_grad():
-        b = next(iter(eval_load))
-        f = b["features"].to(c.device).float()
-        out = mlp(f).flatten(1)
-        cos_in  = torch.nn.functional.cosine_similarity(f.flatten(1)[0], f.flatten(1)[1], dim=0)
-        cos_out = torch.nn.functional.cosine_similarity(out[0], out[1], dim=0)
-        print(f"SigLIP cos {cos_in:.3f}  MLP cos {cos_out:.3f}")
 
     # from pipeline.training.judge import judge_val
     # acc, cov = judge_val(llm, mlp, eval_data, c)
@@ -153,6 +146,8 @@ for e in range(c.num_epochs):
     
 c.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 torch.save(mlp.state_dict(), c.checkpoint_dir / "mlp.pt")
+
+
 
 vm = SigLIP2(model_name=c.vision_model_name, device=c.device)
 

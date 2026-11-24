@@ -25,11 +25,11 @@ class ProjectorTrainConfig:
     mlp_hidden_dim: int = 2048
     mlp_out_dim: int = 1536
   
-    target_rms: float = 0.010334 # 0.009060 # by language_model/analysis/rms.py
+    target_rms: float = 0.010334 # by language_model/analysis/rms.py
 
     batch_size: int = 4
     learning_rate: float = 1e-3
-    num_epochs: int = 5
+    num_epochs: int = 10
 
     image_cache_dir: Path = PROJECT_ROOT / "data" / "image_cache"
     log_dir: Path = PROJECT_ROOT / "pipeline" / "training" / "logs"
@@ -38,8 +38,8 @@ class ProjectorTrainConfig:
     # train/eval/test dir
     TRAIN_COUNT = (
         #"1k"
-        "1k-git"
-        #"10k"
+        #"1k-git"
+        "10k"
         #"28k"
         #"76k"
     )
