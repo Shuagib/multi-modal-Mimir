@@ -37,9 +37,9 @@ class ProjectorTrainConfig:
 
     # train/eval/test dir
     TRAIN_COUNT = (
-        "1k"
+        #"1k"
         #"1k-git"
-        #"10k"
+        "10k"
         #"28k"
         #"76k"
     )

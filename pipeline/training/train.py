@@ -122,9 +122,19 @@ def print_table(info: dict, title: str = "run config"):
 
 print_table(run_info)
 
-header = f"{'epoch':>6} │ {'batch':>6} │ {'loss':>8}"
-print(header)
-print("─" * len(header))
+COLS = ("epoch", "step", "train loss", "lr", "val loss", "gap", "judge acc", "judge cov")
+W = (5, 6, 10, 8, 8, 7, 9, 9)
+
+def row(*vals):
+    cells = [f"{v:>{w}}" if v != "" else " " * w for v, w in zip(vals, W)]
+    print("│ " + " │ ".join(cells) + " │")
+
+def rule(l, m, r):
+    print(l + m.join("─" * (w + 2) for w in W) + r)
+
+rule("┌", "┬", "┐")
+row(*COLS)
+rule("├", "┼", "┤")
 
 for e in range(c.num_epochs):
     running_loss = 0.0
@@ -155,9 +165,8 @@ for e in range(c.num_epochs):
 
         if (batch_num + 1) % LOG_EVERY == 0:
             avg = running_loss / LOG_EVERY
-            print(f"{e+1:>6} | {batch_num+1:>6} | {avg:>8.4f}")
+            row(e + 1, batch_num + 1, f"{avg:.4f}", f"{scheduler.get_last_lr()[0]:.1e}", "", "", "", "")
             log_row(e + 1, batch_num + 1, avg, "") #, scheduler.get_last_lr()[0])
-            running_loss = 0.0
         
         # if batch_num >= max_batch:
         #     break
@@ -176,15 +185,13 @@ for e in range(c.num_epochs):
     avg_val = val_total / len(eval_load)
 
     v_ok, v_shuffle = image_gap(llm, mlp, eval_load, c)
-    print(f"epoch {e+1}/{c.num_epochs} │ val correct {v_ok:.4f} │ val shuffled {v_shuffle:.4f} │ gap {v_shuffle - v_ok:.4f}")
-    
-
-    
     acc, cov = judge_val(llm, mlp, eval_data, c)
-    print(f"epoch {e+1}/{c.num_epochs} │ val loss {avg_val:.4f} │ judge accuracy {acc:.2f} │ coverage {cov:.2f}")    
+    row(e + 1, "end", "", "", f"{avg_val:.4f}", f"{v_shuffle - v_ok:+.4f}", f"{acc:.2f}", f"{cov:.2f}")
+    rule("├", "┼", "┤")
     log_row(e + 1, "", "", avg_val, "", acc, cov)
-    print("─" * len(header))
     
+rule("└", "┴", "┘")
+
 c.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 torch.save(mlp.state_dict(), c.checkpoint_dir / "mlp.pt")
 
