@@ -30,11 +30,14 @@ class Mimir:
         token_type_ids[:, n_head:n_head + n_img] = 1
         # print(f"attention_mask: {attention_mask.shape}, \n token_type_ids {token_type_ids.shape}")
 
+        turn_token=self.tokenizer.convert_tokens_to_ids("<turn|>")
+        
         with torch.no_grad():
                     outputs = self.model.generate(
                         inputs_embeds=input_embeddings,
                         attention_mask=attention_mask,
                         token_type_ids=token_type_ids,
-                        max_new_tokens=max_new_tokens)
+                        max_new_tokens=max_new_tokens,
+                        eos_token_id=[turn_token, self.tokenizer.eos_token_id])
         text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
         return text

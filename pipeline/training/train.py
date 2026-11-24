@@ -154,7 +154,8 @@ for e in range(c.num_epochs):
     log_row(e + 1, "", "", avg_val, "", acc, cov)
     print("─" * len(header))
     
-    
+c.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+torch.save(mlp.state_dict(), c.checkpoint_dir / "mlp.pt")
 
 vm = SigLIP2(model_name=c.vision_model_name, device=c.device)
 
