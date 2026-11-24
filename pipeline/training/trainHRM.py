@@ -3,6 +3,9 @@ import logging
 import torch
 from torch.utils.data import DataLoader
 
+from peft import LoraConfig, get_peft_model
+from transformers import AutoModelForCausalLM
+
 # from transformers import get_constant_schedule_with_warmup
 from language_model.modelHRM import CONDITION, HRMText
 from pipeline.training.config import ProjectorTrainConfigHRM
@@ -15,8 +18,24 @@ log = logging.getLogger("train")
 c = ProjectorTrainConfigHRM()
 device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
+# Models:
+
 mlp = MLP(c.mlp_in_dim, c.mlp_hidden_dim, c.mlp_out_dim, c.target_rms).to(device)
 llm = HRMText(model_name=c.llm_model_name, device=device)
+
+# LoRA:
+lora_config = LoraConfig(
+    r=8,
+    lora_alpha=16, # Should be 2x the rank
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "up_proj", "down_proj"], # Current research points to all linear layers, but not the embedding layer 
+    lora_dropout=0.05,
+    bias="none",
+    task_type="CAUSAL_LM",
+    )
+
+loraModel = get_peft_model(llm.model, lora_config)
+llm.model = loraModel
+
 
 train_data = FeatureDataset(c.train_dir)
 eval_data = FeatureDataset(c.eval_dir)
@@ -83,6 +102,7 @@ for e in range(c.epochs):
         loss = llm.model(inputs_embeds=inputs, attention_mask=attention_mask, labels=labels, token_type_ids=token_type_ids).loss
         # mlp_loss.backward()
         loss.backward()
+        print(mlp.layer1.weight.grad.norm())
         optimizer.step()
         optimizer.zero_grad()
         print(f"{e+1:>6} | {batch_num+1:>6} | {loss.item():>8.4f}")
@@ -124,6 +144,7 @@ for e in range(c.epochs):
         print("real:     ", batch["caption"])
         print("generated:", generated)
         """
+
 
     
 
