@@ -138,11 +138,11 @@ for e in range(c.num_epochs):
     print(f"epoch {e+1}/{c.num_epochs} │ val correct {v_ok:.4f} │ val shuffled {v_shuffle:.4f} │ gap {v_shuffle - v_ok:.4f}")
     
 
-    # from pipeline.training.judge import judge_val
-    # acc, cov = judge_val(llm, mlp, eval_data, c)
-    # print(f"epoch {e+1}/{c.num_epochs} │ val loss {avg_val:.4f} │ judge accuracy {acc:.2f} │ coverage {cov:.2f}")    
-    # log_row(e + 1, "", "", avg_val, "", acc, cov)
-    # print("─" * len(header))
+    from pipeline.training.judge import judge_val
+    acc, cov = judge_val(llm, mlp, eval_data, c)
+    print(f"epoch {e+1}/{c.num_epochs} │ val loss {avg_val:.4f} │ judge accuracy {acc:.2f} │ coverage {cov:.2f}")    
+    log_row(e + 1, "", "", avg_val, "", acc, cov)
+    print("─" * len(header))
     
 c.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 torch.save(mlp.state_dict(), c.checkpoint_dir / "mlp.pt")
