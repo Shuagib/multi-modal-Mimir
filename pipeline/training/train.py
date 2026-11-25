@@ -52,10 +52,10 @@ eval_load = loader(eval_data)
 
 from adam_atan2_pytorch import AdamAtan2
 
-optimizer = AdamAtan2(
-    list(mlp.parameters()) + list(llm.model.parameters()),
-    lr=1e-5, weight_decay=0.1
-)
+optimizer = AdamAtan2([
+    {"params": mlp.parameters(),       "lr": 1e-4},   # mlp laver ikke en skid derfor 10x højere
+    {"params": llm.model.parameters(), "lr": 1e-5},   # jacob siger 1e-5
+], weight_decay=0.1)
 
 total_steps = len(train_load) * c.num_epochs
 warmup = min(500, int(0.1 * total_steps))     # 500 steps or 10% of total
@@ -192,11 +192,22 @@ for e in range(c.num_epochs):
     
 rule("└", "┴", "┘")
 
-c.checkpoint_dir.mkdir(parents=True, exist_ok=True)
-torch.save(mlp.state_dict(), c.checkpoint_dir / "mlp.pt")
+run_name = f"{c.TRAIN_COUNT}_{time.strftime('%Y%m%d-%H%M%S')}"
+save_dir = c.checkpoint_dir / run_name
+save_dir.mkdir(parents=True, exist_ok=True)
 
-c.checkpoint_dir.mkdir(parents=True, exist_ok=True)
-torch.save(llm.state_dict(), c.checkpoint_dir / "mimir.pt")
+torch.save({
+    "state_dict": mlp.state_dict(),
+    "bias1": mlp.layer1.bias is not None,
+    "bias2": mlp.layer2.bias is not None,
+    "target_rms": c.target_rms,
+    "run_info": run_info,
+}, save_dir / "mlp.pt")
+
+llm.model.save_pretrained(save_dir / "llm")
+llm.tokenizer.save_pretrained(save_dir / "llm")
+
+print(f"saved model to {save_dir}")
 
 
 import json
