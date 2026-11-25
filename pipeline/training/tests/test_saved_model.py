@@ -26,17 +26,10 @@ IMAGE_EXTS ={".jpg", ".jpeg", ".png", ".webp", ".bmp"}
 
 PROMPTS = [
     "Describe the image.",
-    "Describe the image in detail.",
-    "What is the main subject of this image?",
-    "What objects can you see?",
-    "What colors dominate the image?",
-    "Is the image taken indoors or outdoors?",
-    "What is happening in the image?",
-    "How many people are in the image?",
-    "What is the lighting like in this image?",
-    "Is there any text in the image? What does it say?",
+    "What do you see?",
+    "What is in the image?",
+    "What colors do you see?",
     "Beskriv billedet.",
-    "Hvad ser du på billedet?",
 ]
 
 
