@@ -5,3 +5,8 @@ data/
 !data-1k-git/
 data-*/
 pipeline/training/logs/
+
+# data and checkpoints
+data-*/
+pipeline/training/model_saves/
+*.pt
