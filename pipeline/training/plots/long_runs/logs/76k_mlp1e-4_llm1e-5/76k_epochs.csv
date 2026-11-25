@@ -1,0 +1,4 @@
+epoch,global_step,val_loss,gap,judge_acc,judge_cov
+1,18901,1.9626,0.4252,nan,nan
+2,37802,1.9109,0.2829,nan,nan
+3,56703,1.9034,0.3065,3.6,3.7
