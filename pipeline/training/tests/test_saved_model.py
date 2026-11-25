@@ -31,7 +31,7 @@ def load_mlp(p: Path, c: ProjectorTrainConfig) -> MLP:
     if isinstance(checkpoint, dict) and "run_info" in checkpoint:
         print("run info:", checkpoint["run_info"])
 
-    return mlp.to(c.device.eval())
+    return mlp.to(c.device).eval()
 
 @torch.no_grad()
 def test_loss(llm, mlp, loader, c) -> float:
