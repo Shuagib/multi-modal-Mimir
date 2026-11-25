@@ -243,6 +243,8 @@ from pipeline.training.judge import judge_score
 results = []
 with torch.no_grad():
     for i in range(len(test_data)):
+        if (i + 1) % 10 == 0:
+            print(f"test {i + 1}/{len(test_data)}", flush=True)
         s = test_data[i]
         feats = torch.as_tensor(s["features"]).unsqueeze(0).to(c.device).float()
         p_ids = llm.tokenizer.apply_chat_template(
@@ -251,7 +253,7 @@ with torch.no_grad():
         txt = llm.embedding(p_ids)
         img = mlp(feats).to(txt.dtype)
         inputs = torch.cat([txt[:, :4], img, txt[:, 4:]], dim=1)
-        gen = llm.generate_and_decode(inputs, max_new_tokens=300)
+        gen = llm.generate_and_decode(inputs, max_new_tokens=150)
         acc, cov = judge_score(s["caption"], gen, c)
         results.append({"i": i, "prompt": s["prompt"], "reference": s["caption"],
                         "generated": gen, "accuracy": acc, "coverage": cov})
