@@ -38,9 +38,9 @@ def test_loss(llm, mlp, loader, c) -> float:
     total = 0.0
     for batch in loader:
         features = batch["features"].to(c.device).float()
-        inputs, attention_mask, labels, token_type_ids = build_batch(batch["features"], batch["caption"], features, llm, mlp, c)
+        inputs, attention_mask, labels, token_type_ids = build_batch(batch["prompt"], batch["caption"], features, llm, mlp, c)
         total += llm.model(
-            input_embeds=inputs,
+            inputs_embeds=inputs,
             attention_mask=attention_mask,
             labels=labels,
             token_type_ids=token_type_ids
