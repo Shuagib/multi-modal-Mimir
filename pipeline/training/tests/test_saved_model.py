@@ -6,8 +6,10 @@ Usage:
 """
 
 import argparse
+import io
 import json
 import random
+import sys
 from pathlib import Path
 
 import torch
@@ -93,12 +95,28 @@ def main() -> None:
     with open(out_path, "w") as fh:
         for path in find_images(args.image_dir):
             image = Image.open(path).convert("RGB")
+            show_image(image)
             for prompt in rng.sample(PROMPTS, k=min(args.k, len(PROMPTS))):
                 gen = generate(llm, mlp, vm, image, prompt, c)
                 print(f"\n[{path.name}] {prompt}\n-> {gen}", flush=True)
                 fh.write(json.dumps({"image": path.name, "prompt": prompt, "generated": gen}) + "\n")
     print(f"\nresults -> {out_path}")
 
+def show_image(image: Image.Image, width: int = 400) -> None:
+    """Draw an image inline using kitty's graphics protocol."""
+    img = image.copy()
+    img.thumbnail((width, width))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    data = base64.standard_b64encode(buf.getvalue())
+    chunks = [data[i:i + 4096] for i in range(0, len(data), 4096)]
+    for i, chunk in enumerate(chunks):
+        more = 1 if i < len(chunks) - 1 else 0
+        header = f"a=T,f=100,m={more}" if i == 0 else f"m={more}"
+        sys.stdout.write(f"\033_G{header};{chunk.decode()}\033\\")
+    sys.stdout.write("\n")
+    sys.stdout.flush()
 
 if __name__ == "__main__":
     main()
+
