@@ -8,9 +8,10 @@ mkdir -p pipeline/training/logs
 
 # TRAIN_COUNT  EPOCHS  MLP_LR  LLM_LR   (most important first)
 RUNS=(
-  "76k 3 1e-4 1e-5"
-  "28k 3 1e-4 1e-5"
-  "1k  5 1e-4 1e-5"
+  #"76k 3 1e-4 1e-5"
+  #"28k 3 1e-4 1e-5"
+  #"1k  5 1e-4 1e-5"
+  "10k  10 1e-4 1e-5"
 )
 
 

@@ -1,7 +1,15 @@
 start: Wed Nov 25 06:28:27 CET 2026  |  28k  epochs=3  mlp_lr=1e-4  llm_lr=1e-5
 commit: d361258
-Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:  12%|█▏        | 42/339 [00:00<00:00, 411.02it/s]Loading weights:  35%|███▍      | 117/339 [00:00<00:00, 596.81it/s]Loading weights:  55%|█████▌    | 187/339 [00:00<00:00, 642.55it/s]Loading weights: 100%|██████████| 339/339 [00:00<00:00, 948.11it/s]
-Loading weights:   0%|          | 0/131 [00:00<?, ?it/s]Loading weights:  15%|█▍        | 19/131 [00:00<00:00, 182.12it/s]Loading weights: 100%|██████████| 131/131 [00:00<00:00, 694.63it/s]
+
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]
+Loading weights:  12%|█▏        | 42/339 [00:00<00:00, 411.02it/s]
+Loading weights:  35%|███▍      | 117/339 [00:00<00:00, 596.81it/s]
+Loading weights:  55%|█████▌    | 187/339 [00:00<00:00, 642.55it/s]
+Loading weights: 100%|██████████| 339/339 [00:00<00:00, 948.11it/s]
+
+Loading weights:   0%|          | 0/131 [00:00<?, ?it/s]
+Loading weights:  15%|█▍        | 19/131 [00:00<00:00, 182.12it/s]
+Loading weights: 100%|██████████| 131/131 [00:00<00:00, 694.63it/s]
 ┌───────────────┬─────────────────────────────────────────┐
 │ run config                                              │
 ├───────────────┼─────────────────────────────────────────┤
@@ -244,7 +252,10 @@ commit: d361258
 │     3 │    end │            │          │   2.0457 │ +0.3298 │      2.80 │      3.00 │
 ├───────┼────────┼────────────┼──────────┼──────────┼─────────┼───────────┼───────────┤
 └───────┴────────┴────────────┴──────────┴──────────┴─────────┴───────────┴───────────┘
-Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.93s/it]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.93s/it]
+
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]
+Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.93s/it]
+Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.93s/it]
 saved model to /work/mimir/multi-modal-Mimir/pipeline/training/model_saves/28k_20261125-073701
 test 10/300
 test 20/300
