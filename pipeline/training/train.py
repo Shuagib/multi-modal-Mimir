@@ -16,7 +16,6 @@ from pipeline.training.config import ProjectorTrainConfig
 from pipeline.training.feature_dataset import FeatureDataset
 from pipeline.training.tests.image_gap import image_gap
 from projector.two_layer_mlp import MLP
-from vision_model.model import SigLIP2
 from pipeline.training.judge import judge_val
 
 #from pipeline.training.tests.val_loss import val_loss
@@ -52,9 +51,13 @@ eval_load = loader(eval_data)
 
 from adam_atan2_pytorch import AdamAtan2
 
+import os
+MLP_LR = float(os.environ.get("MLP_LR", 1e-4))
+LLM_LR = float(os.environ.get("LLM_LR", 1e-5))
+
 optimizer = AdamAtan2([
-    {"params": mlp.parameters(),       "lr": 1e-4},   # mlp laver ikke en skid derfor 10x højere
-    {"params": llm.model.parameters(), "lr": 1e-5},   # jacob siger 1e-5
+    {"params": mlp.parameters(),       "lr": MLP_LR},
+    {"params": llm.model.parameters(), "lr": LLM_LR},
 ], weight_decay=0.1)
 
 total_steps = len(train_load) * c.num_epochs
@@ -77,7 +80,8 @@ import time
 log_path = c.log_dir / f"log_{time.strftime('%Y%m%d-%H%M%S')}.csv"
 log_path.parent.mkdir(parents=True, exist_ok=True)
 with open(log_path, "w", newline="") as f:
-    csv.writer(f).writerow(["epoch", "step", "train_loss", "val_loss", "lr"])
+    csv.writer(f).writerow(["epoch", "step", "train_loss", "mlp_lr", "llm_lr",
+                        "val_loss", "gap", "judge_acc", "judge_cov"])
 
 def log_row(*row):
     with open(log_path, "a", newline="") as f:
@@ -166,7 +170,8 @@ for e in range(c.num_epochs):
         if (batch_num + 1) % LOG_EVERY == 0:
             avg = running_loss / LOG_EVERY
             row(e + 1, batch_num + 1, f"{avg:.4f}", f"{scheduler.get_last_lr()[0]:.1e}", "", "", "", "")
-            log_row(e + 1, batch_num + 1, avg, "") #, scheduler.get_last_lr()[0])
+            mlp_lr, llm_lr = scheduler.get_last_lr()
+            log_row(e + 1, batch_num + 1, avg, mlp_lr, llm_lr, "", "", "", "")
             running_loss = 0.0
         # if batch_num >= max_batch:
         #     break
@@ -185,10 +190,13 @@ for e in range(c.num_epochs):
     avg_val = val_total / len(eval_load)
 
     v_ok, v_shuffle = image_gap(llm, mlp, eval_load, c)
-    acc, cov = judge_val(llm, mlp, eval_data, c)
+    if e + 1 == c.num_epochs:
+        acc, cov = judge_val(llm, mlp, eval_data, c)
+    else:
+        acc = cov = float("nan")
     row(e + 1, "end", "", "", f"{avg_val:.4f}", f"{v_shuffle - v_ok:+.4f}", f"{acc:.2f}", f"{cov:.2f}")
     rule("├", "┼", "┤")
-    log_row(e + 1, "", "", avg_val, "", acc, cov)
+    log_row(e + 1, "end", "", "", "", avg_val, v_shuffle - v_ok, acc, cov)
     
 rule("└", "┴", "┘")
 

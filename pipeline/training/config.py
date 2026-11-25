@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
+import os
 
 import torch
 
@@ -29,14 +30,14 @@ class ProjectorTrainConfig:
 
     batch_size: int = 4
     learning_rate: float = 1e-3
-    num_epochs: int = 5
+    num_epochs: int = int(os.environ.get("EPOCHS", 5))
 
     image_cache_dir: Path = PROJECT_ROOT / "data" / "image_cache"
     log_dir: Path = PROJECT_ROOT / "pipeline" / "training" / "logs"
     checkpoint_dir: Path = PROJECT_ROOT / "pipeline" / "training" / "model_saves"
 
     # train/eval/test dir
-    TRAIN_COUNT = (
+    TRAIN_COUNT = os.environ.get("TRAIN_COUNT", 
         #"1k"
         #"1k-git"
         "10k"

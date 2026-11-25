@@ -12,6 +12,13 @@ from matplotlib.gridspec import GridSpec
 HERE = Path(__file__).parent
 RUN = sys.argv[1] if len(sys.argv) > 1 else "10k"
 
+# per-run labels: (data size, optimizer/lr description). Add a line for each new run.
+META = {
+    "10k": ("10k", "AdamAtan2, lr 1e-5 (all params), cosine to 10%"),
+    "10k_mlp-lr-1e-4": ("10k", "AdamAtan2, MLP lr 1e-4 / LLM lr 1e-5, cosine to 10%"),
+}
+DATA, OPT = META.get(RUN, (RUN, "AdamAtan2, cosine to 10%"))
+
 steps = pd.read_csv(HERE / f"{RUN}_steps.csv")
 epochs = pd.read_csv(HERE / f"{RUN}_epochs.csv")
 
@@ -85,9 +92,9 @@ fig = plt.figure(figsize=(12, 8.6))
 gs = GridSpec(3, 2, figure=fig, height_ratios=[0.42, 1, 1], hspace=0.62, wspace=0.18,
               left=0.06, right=0.97, top=0.88, bottom=0.07)
 
-fig.text(0.06, 0.955, f"Mimir × SigLIP 2  ·  full fine-tune on {RUN} PixMo (cap, count, cap-qa)",
+fig.text(0.06, 0.955, f"Mimir × SigLIP 2  ·  full fine-tune on {DATA} PixMo (cap, count, cap-qa)",
          fontsize=16, fontweight="bold", color=TEXT)
-fig.text(0.06, 0.925, f"{len(epochs)} epochs  ·  {x_end:,} steps  ·  AdamAtan2, lr 1e-5, cosine to 10%",
+fig.text(0.06, 0.925, f"{len(epochs)} epochs  ·  {x_end:,} steps  ·  {OPT}",
          fontsize=9.5, color=MUTED)
 
 # headline numbers
@@ -154,11 +161,13 @@ epoch_axis(ax)
 
 # learning rate
 ax = fig.add_subplot(gs[2, 1])
-ax.fill_between(steps.global_step, 0, steps.lr * 1e6, color=LR, alpha=0.08, lw=0)
-ax.plot(steps.global_step, steps.lr * 1e6, color=LR, lw=2)
-ax.set_ylim(0, steps.lr.max() * 1e6 * 1.15)
-ax.set_ylabel("lr  (×10⁻⁶)")
-card_title(ax, "Learning rate", "500-step warmup, then cosine decay to 10% of peak")
+scale = 1e6 if steps.lr.max() < 5e-5 else 1e5
+unit = "×10⁻⁶" if scale == 1e6 else "×10⁻⁵"
+ax.fill_between(steps.global_step, 0, steps.lr * scale, color=LR, alpha=0.08, lw=0)
+ax.plot(steps.global_step, steps.lr * scale, color=LR, lw=2)
+ax.set_ylim(0, steps.lr.max() * scale * 1.15)
+ax.set_ylabel(f"lr  ({unit})")
+card_title(ax, "Learning rate", "logged lr (MLP group); 500-step warmup, cosine to 10% of peak")
 epoch_axis(ax)
 
 out = HERE / f"{RUN}_overview.png"
