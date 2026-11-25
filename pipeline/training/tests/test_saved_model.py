@@ -1,24 +1,42 @@
-"""Evaluate a saved run on the test set.
+"""Run a saved model on a folder of images with randomly chosen prompts.
 
 Usage:
-    uv run -m pipeline.training.tests.test_saved pipeline/training/model_saves/<run_name>
-    uv run -m pipeline.training.tests.test_saved <run_dir> --n 50 --no-judge
+    uv run -m pipeline.training.tests.test_saved_model <run_dir>
+    uv run -m pipeline.training.tests.test_saved_model <run_dir> [image_dir] --k 3 --seed 0
 """
 
 import argparse
 import json
+import random
 from pathlib import Path
 
 import torch
+from PIL import Image
 from torch import nn
-from torch.utils.data import DataLoader
 
 from language_model.mimir import Mimir
-from pipeline.training.build_batch import build_batch
 from pipeline.training.config import ProjectorTrainConfig
-from pipeline.training.feature_dataset import FeatureDataset
-from pipeline.training.tests.image_gap import image_gap
 from projector.two_layer_mlp import MLP
+from vision_model.model import SigLIP2
+
+DEFAULT_IMAGE_DIR = Path(__file__).resolve().parent / "test_images"
+IMAGE_EXTS ={".jpg", ".jpeg", ".png", ".webp", ".bmp"}
+
+PROMPTS = [
+    "Describe the image.",
+    "Describe the image in detail.",
+    "What is the main subject of this image?",
+    "What objects can you see?",
+    "What colors dominate the image?",
+    "Is the image taken indoors or outdoors?",
+    "What is happening in the image?",
+    "How many people are in the image?",
+    "What is the lighting like in this image?",
+    "Is there any text in the image? What does it say?",
+    "Beskriv billedet.",
+    "Hvad ser du på billedet?",
+]
+
 
 def load_mlp(p: Path, c: ProjectorTrainConfig) -> MLP:
     checkpoint = torch.load(p, map_location=c.device)
@@ -27,44 +45,40 @@ def load_mlp(p: Path, c: ProjectorTrainConfig) -> MLP:
     mlp.layer1 = nn.Linear(c.mlp_in_dim, c.mlp_hidden_dim, bias="layer1.bias" in state)
     mlp.layer2 = nn.Linear(c.mlp_hidden_dim, c.mlp_out_dim, bias="layer2.bias" in state)
     mlp.load_state_dict(state)
-
     if isinstance(checkpoint, dict) and "run_info" in checkpoint:
         print("run info:", checkpoint["run_info"])
-
     return mlp.to(c.device).eval()
 
-@torch.no_grad()
-def test_loss(llm, mlp, loader, c) -> float:
-    total = 0.0
-    for batch in loader:
-        features = batch["features"].to(c.device).float()
-        inputs, attention_mask, labels, token_type_ids = build_batch(batch["prompt"], batch["caption"], features, llm, mlp, c)
-        total += llm.model(
-            inputs_embeds=inputs,
-            attention_mask=attention_mask,
-            labels=labels,
-            token_type_ids=token_type_ids
-            ).loss.item()
-    return total / len(loader)
 
 @torch.no_grad()
-def generate(llm, mlp, sample, c) -> str:
-    features = torch.as_tensor(sample["features"]).unsqueeze(0).to(c.device).float()
+def generate(llm: Mimir, mlp: MLP, vm: SigLIP2, image: Image.Image, prompt: str, c: ProjectorTrainConfig) -> str:
+    features = vm.embed(image).to(c.device).float()  # [1, 256, 768]
     p_ids = llm.tokenizer.apply_chat_template(
-        [{"role": "user", "content": sample["prompt"]}],
+        [{"role": "user", "content": prompt}],
         add_generation_prompt=True, return_tensors="pt")["input_ids"].to(c.device)
     txt = llm.embedding(p_ids)
     img = mlp(features).to(txt.dtype)
-    inputs = torch.cat([txt[:, :4], img, txt[:, 4:]], dim=1)
+    inputs = torch.cat([txt[:, :4], img, txt[:, 4:]], dim=1)  # same layout as training
     return llm.generate_and_decode(inputs, max_new_tokens=150)
+
+
+def find_images(image_dir: Path) -> list[Path]:
+    images = sorted(p for p in image_dir.iterdir() if p.suffix.lower() in IMAGE_EXTS)
+    if not images:
+        raise SystemExit(f"no images found in {image_dir}")
+    return images
+
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("run_dir", type=Path, help="folder with mlp.pt (and llm/ if fine-tuned)")
-    ap.add_argument("--n", type=int, default=None, help="number of samples to generate (default: all)")
-    ap.add_argument("--no-judge", action="store_true", help="skip judge scoring")
+    ap.add_argument("image_dir", type=Path, nargs="?", default=DEFAULT_IMAGE_DIR,
+                    help="folder of images to test on (default: tests/test_images)")
+    ap.add_argument("--k", type=int, default=2, help="random prompts per image")
+    ap.add_argument("--seed", type=int, default=None, help="fix prompt selection for reproducibility")
     args = ap.parse_args()
 
+    rng = random.Random(args.seed)
     c = ProjectorTrainConfig()
     llm_path = args.run_dir / "llm"
     llm_name = str(llm_path) if llm_path.exists() else c.llm_model_name
@@ -73,39 +87,18 @@ def main() -> None:
     llm = Mimir(model_name=llm_name, device=c.device)
     llm.model.eval()
     mlp = load_mlp(args.run_dir / "mlp.pt", c)
+    vm = SigLIP2(model_name=c.vision_model_name, device=c.device)
 
-    test_data = FeatureDataset(c.test_dir)
-    test_load = DataLoader(test_data, batch_size=c.batch_size, shuffle=False)
-    print(f"test set: {c.test_dir} ({len(test_data)} samples)")
-
-    loss = test_loss(llm, mlp, test_load, c)
-    t_ok, t_shuf = image_gap(llm, mlp, test_load, c, n_batches=len(test_load))
-    print(f"test loss {loss:.4f}   image gap {t_shuf - t_ok:+.4f}")
-
-    if not args.no_judge:
-        from pipeline.training.judge import judge_score
-
-    n = min(args.n or len(test_data), len(test_data))
-    out_path = args.run_dir / "test.jsonl"
-    accs, covs = [], []
+    out_path = args.run_dir / "image_test.jsonl"
     with open(out_path, "w") as fh:
-        for i in range(n):
-            s = test_data[i]
-            gen = generate(llm, mlp, s, c)
-            acc = cov = None
-            if not args.no_judge:
-                acc, cov = judge_score(s["caption"], gen, c)
-                if acc is not None: accs.append(acc)
-                if cov is not None: covs.append(cov)
-            fh.write(json.dumps({"i": i, "prompt": s["prompt"], "reference": s["caption"],
-                                 "generated": gen, "accuracy": acc, "coverage": cov}) + "\n")
-            if (i + 1) % 10 == 0:
-                print(f"generated {i + 1}/{n}", flush=True)
-    avg = lambda xs: sum(xs) / len(xs) if xs else float("nan")
-    print(f"\n{'samples':12} {n}\n{'test loss':12} {loss:.4f}\n{'image gap':12} {t_shuf - t_ok:+.4f}")
-    if not args.no_judge:
-        print(f"{'judge acc':12} {avg(accs):.2f}\n{'judge cov':12} {avg(covs):.2f}")
-    print(f"captions -> {out_path}")
+        for path in find_images(args.image_dir):
+            image = Image.open(path).convert("RGB")
+            for prompt in rng.sample(PROMPTS, k=min(args.k, len(PROMPTS))):
+                gen = generate(llm, mlp, vm, image, prompt, c)
+                print(f"\n[{path.name}] {prompt}\n-> {gen}", flush=True)
+                fh.write(json.dumps({"image": path.name, "prompt": prompt, "generated": gen}) + "\n")
+    print(f"\nresults -> {out_path}")
+
 
 if __name__ == "__main__":
     main()
