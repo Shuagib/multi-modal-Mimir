@@ -8,10 +8,10 @@ mkdir -p pipeline/training/logs
 
 # TRAIN_COUNT  EPOCHS  MLP_LR  LLM_LR   (most important first)
 RUNS=(
-  #"76k 3 1e-4 1e-5"
-  #"28k 3 1e-4 1e-5"
-  #"1k  5 1e-4 1e-5"
-  "10k  10 1e-4 1e-5"
+  "1k  10 1e-4 1e-5"
+  "10k 10 1e-4 1e-5"
+  "28k 10 1e-4 1e-5"
+  "76k 10 1e-4 1e-5"
 )
 
 
@@ -21,9 +21,10 @@ for r in "${RUNS[@]}"; do
   export TRAIN_COUNT EPOCHS MLP_LR LLM_LR
   LOG=pipeline/training/logs/run_${TRAIN_COUNT}_mlp${MLP_LR}_llm${LLM_LR}_$(date +%Y%m%d-%H%M%S).txt
   {
+    SECONDS=0
     echo "start: $(date)  |  $TRAIN_COUNT  epochs=$EPOCHS  mlp_lr=$MLP_LR  llm_lr=$LLM_LR"
     echo "commit: $(git rev-parse --short HEAD)"
     uv run pipeline/training/train.py || echo "RUN FAILED (exit $?)"
-    echo "end: $(date)"
+    echo "end: $(date)  |  took $((SECONDS/3600))h $((SECONDS%3600/60))m"
   } 2>&1 | tee "$LOG"
 done

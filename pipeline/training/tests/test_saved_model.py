@@ -6,6 +6,7 @@ Usage:
 """
 
 import argparse
+import base64
 import io
 import json
 import random
@@ -13,7 +14,6 @@ import sys
 from pathlib import Path
 
 import torch
-import base64
 from PIL import Image
 from torch import nn
 
