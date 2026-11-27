@@ -25,7 +25,7 @@ log = logging.getLogger("train")
 c = ProjectorTrainConfigQwen()
 device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
-mlp = MLP(c.mlp_in_dim, c.mlp_hidden_dim, c.mlp_out_dim, c.target_rms).to(device)
+mlp = MLP(c.mlp_out_dim, c.target_rms).to(device)
 llm =   Qwen(model_name=c.llm_model_name, device=device)
 
 #Unblock this if we want to freeze the weights

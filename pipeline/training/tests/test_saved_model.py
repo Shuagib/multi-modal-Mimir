@@ -37,9 +37,7 @@ PROMPTS = [
 def load_mlp(p: Path, c: ProjectorTrainConfig) -> MLP:
     checkpoint = torch.load(p, map_location=c.device)
     state = checkpoint.get("state_dict", checkpoint)
-    mlp = MLP(c.mlp_in_dim, c.mlp_hidden_dim, c.mlp_out_dim, checkpoint.get("target_rms", c.target_rms))
-    mlp.layer1 = nn.Linear(c.mlp_in_dim, c.mlp_hidden_dim, bias="layer1.bias" in state)
-    mlp.layer2 = nn.Linear(c.mlp_hidden_dim, c.mlp_out_dim, bias="layer2.bias" in state)
+    mlp = MLP(c.mlp_out_dim, checkpoint.get("target_rms", c.target_rms))
     mlp.load_state_dict(state)
     if isinstance(checkpoint, dict) and "run_info" in checkpoint:
         print("run info:", checkpoint["run_info"])

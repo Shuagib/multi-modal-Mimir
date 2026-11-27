@@ -31,7 +31,7 @@ LOG_EVERY = 100
 running_loss = 0.0
 max_batch = 10
 
-mlp = MLP(c.mlp_in_dim, c.mlp_hidden_dim, c.mlp_out_dim, c.target_rms).to(c.device)
+mlp = MLP(c.mlp_out_dim, c.target_rms).to(c.device)
 llm = Mimir(model_name=c.llm_model_name, device=c.device)
 
 # from peft import LoraConfig, get_peft_model

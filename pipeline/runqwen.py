@@ -20,7 +20,7 @@ MLP_OUT_DIM = 1536
 MLP_norm_scale = 0.026090
 
 vm = SigLIP2(model_name=vm_model_name, device=device)
-mlp = MLP(MLP_IN_DIM, MLP_HID_DIM, MLP_OUT_DIM, MLP_norm_scale).to(device)
+mlp = MLP(MLP_OUT_DIM, MLP_norm_scale).to(device)
 llm_model_name ="Qwen/Qwen2.5-1.5B-Instruct"
 
 llm = Qwen(model_name=llm_model_name, device=device)

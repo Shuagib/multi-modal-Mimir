@@ -2,7 +2,7 @@ from torch import nn
 
 
 class MLP(nn.Module):
-    def __init__(self, in_dim, hidden_dim, out_dim, target_norm_scale):
+    def __init__(self, out_dim, target_norm_scale):
         super().__init__()
         # self.layer1 = nn.Linear(in_features=in_dim, out_features=hidden_dim, bias=False)
         # self.layer2 = nn.Linear(in_features=hidden_dim, out_features=out_dim)

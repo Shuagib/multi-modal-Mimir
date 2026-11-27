@@ -20,7 +20,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.ba
 
 # Models:
 
-mlp = MLP(c.mlp_in_dim, c.mlp_hidden_dim, c.mlp_out_dim, c.target_rms).to(device)
+mlp = MLP(c.mlp_out_dim, c.target_rms).to(device)
 llm = HRMText(model_name=c.llm_model_name, device=device)
 llm.model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
 llm.model.config.use_cache = False

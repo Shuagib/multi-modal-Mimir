@@ -23,7 +23,7 @@ c = ProjectorTrainConfig()
 llm = Mimir(model_name=str(run / "llm"), device=c.device)
 llm.model.eval()
 ck = torch.load(run / "mlp.pt", map_location=c.device)
-mlp = MLP(c.mlp_in_dim, c.mlp_hidden_dim, c.mlp_out_dim, ck["target_rms"]).to(c.device)
+mlp = MLP(c.mlp_out_dim, ck["target_rms"]).to(c.device)
 mlp.load_state_dict(ck["state_dict"])
 mlp.eval()
 

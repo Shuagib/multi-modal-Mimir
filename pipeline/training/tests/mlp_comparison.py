@@ -9,7 +9,7 @@ c = ProjectorTrainConfig()
 eval_data = FeatureDataset(c.eval_dir)
 eval_load = DataLoader(eval_data, batch_size=c.batch_size, shuffle=True)
 
-mlp = MLP(c.mlp_in_dim, c.mlp_hidden_dim, c.mlp_out_dim, c.target_rms).to(c.device)
+mlp = MLP(c.mlp_out_dim, c.target_rms).to(c.device)
 
 @torch.no_grad()
 def main():
