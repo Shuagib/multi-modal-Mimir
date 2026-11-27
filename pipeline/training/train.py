@@ -18,8 +18,12 @@ from pipeline.training.build_batch import build_batch
 from pipeline.training.config import ProjectorTrainConfig
 from pipeline.training.feature_dataset import FeatureDataset
 from pipeline.training.tests.image_gap import image_gap
-#from projector.two_layer_mlp_new import MLP
-from projector.two_layer_mlp_old import MLP
+
+import os
+if os.environ.get("PROJECTOR", "old") == "new":
+    from projector.two_layer_mlp_new import MLP   # 24 tokens
+else:
+    from projector.two_layer_mlp_old import MLP   # 256 tokens
 
 from pipeline.training.judge import judge_val
 
