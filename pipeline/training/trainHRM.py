@@ -22,6 +22,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.ba
 
 mlp = MLP(c.mlp_in_dim, c.mlp_hidden_dim, c.mlp_out_dim, c.target_rms).to(device)
 llm = HRMText(model_name=c.llm_model_name, device=device)
+llm.model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+llm.model.config.use_cache = False
 
 # LoRA:
 lora_config = LoraConfig(
@@ -56,8 +58,8 @@ prompt_ids = llm.tokenizer(
         ).input_ids.to(device)
 
 optimizer = torch.optim.AdamW([
-    {"params": mlp.parameters(),       "lr": 1e-4},
-    {"params": llm.model.parameters(), "lr": 2e-5},
+    {"params": mlp.parameters(),       "lr": 1e-5},
+    {"params": llm.model.parameters(), "lr": 2.5e-5}, # From LoRA without regret paper
 ])
 
 llm.model.train()
@@ -102,7 +104,7 @@ for e in range(c.epochs):
         loss = llm.model(inputs_embeds=inputs, attention_mask=attention_mask, labels=labels, token_type_ids=token_type_ids).loss
         # mlp_loss.backward()
         loss.backward()
-        print(mlp.layer1.weight.grad.norm())
+        #print(mlp.layer1.weight.grad.norm())
         optimizer.step()
         optimizer.zero_grad()
         print(f"{e+1:>6} | {batch_num+1:>6} | {loss.item():>8.4f}")
