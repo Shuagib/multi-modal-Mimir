@@ -71,14 +71,14 @@ class ProjectorTrainConfigHRM:
     target_rms: float = 0.009060
     epochs = 1
 
-    batch_size: int = 4
+    batch_size: int = 2
     learning_rate: float = 1e-3
     num_epochs: int = 20
 
     image_cache_dir: Path = PROJECT_ROOT / "data" / "image_cache"
     checkpoint_dir: Path = PROJECT_ROOT / "checkpoints" / "projector_hrm"
-    train_dir: Path = PROJECT_ROOT / "data" / "train"
-    eval_dir: Path = PROJECT_ROOT / "data" / "eval"
+    train_dir: Path = PROJECT_ROOT / "data-1k-git" / "train"
+    eval_dir: Path  = PROJECT_ROOT / "data-1k-git" / "eval"
 
 
 
