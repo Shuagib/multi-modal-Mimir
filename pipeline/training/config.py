@@ -28,7 +28,7 @@ class ProjectorTrainConfig:
   
     target_rms: float = 0.010334 # by language_model/analysis/rms.py
 
-    batch_size: int = 4
+    batch_size: int = 2
     learning_rate: float = 1e-3
     num_epochs: int = int(os.environ.get("EPOCHS", 5))
 

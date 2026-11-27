@@ -8,7 +8,7 @@ def build_batch(prompts, captions, features, llm, mlp, c):
         p_ids = llm.tokenizer.apply_chat_template(
                     [{"role": "user", "content": p}],
                     add_generation_prompt=True)["input_ids"]
-        c_ids = llm.tokenizer(cap + "<turn|>", add_special_tokens=False).input_ids[:512]
+        c_ids = llm.tokenizer(cap + "<turn|>", add_special_tokens=False).input_ids[:256]
         seqs.append(p_ids + c_ids)
         label_seqs.append([-100] * len(p_ids) + c_ids)
         p_lens.append(len(p_ids))
