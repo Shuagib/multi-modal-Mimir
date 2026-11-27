@@ -10,8 +10,8 @@ N=300                                   # test samples per model
 
 # TRAIN_COUNT  checkpoint folder (10-epoch runs, mlp lr 1e-4 / llm lr 1e-5)
 MODELS=(
-  "1k  1k_20261125-142303"
-  "10k 10k_20261125-160807"
+  #"1k  1k_20261125-142303"
+  #"10k 10k_20261125-160807"
   "28k 28k_20261125-202607"
   "76k 76k_20261127-001436"
 )
