@@ -23,7 +23,7 @@ llm = Mimir(model_name=str(run / "llm"), device="cpu")
 llm.model.to(torch.bfloat16).to(c.device).eval()
 
 ck = torch.load(run / "mlp.pt", map_location=c.device, weights_only=False)
-mlp = MLP(c.mlp_out_dim, ck["state_dict"])
+mlp = MLP(c.mlp_out_dim, ck["target_rms"])
 mlp.load_state_dict(ck["state_dict"])
 mlp.to(c.device).eval()
 
