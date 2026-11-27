@@ -1,7 +1,8 @@
 """Ask the trained model about an image.
 
-one question:   uv run -m pipeline.ask <run_dir> <image> "Describe the image."
-web interface:  uv run --with gradio -m pipeline.ask <run_dir>        (opens http://127.0.0.1:7860)
+one question:   uv run -m pipeline.ask pipeline/training/model_saves/76k_20261127-001436 <image_path> <prompt>
+
+web interface:  uv run --with gradio -m pipeline.ask pipeline/training/model_saves/76k_20261127-001436        (opens http://127.0.0.1:7860)
 """
 import sys
 from pathlib import Path
@@ -13,11 +14,6 @@ from language_model.mimir import Mimir
 from pipeline.training.config import ProjectorTrainConfig
 from projector.two_layer_mlp import MLP
 from vision_model.model import SigLIP2
-
-"""
-uv run -m pipeline.ask pipeline/training/model_saves/76k_20261127-001436 <image_path> <prompt>
-"""
-
 
 c = ProjectorTrainConfig()
 run = Path(sys.argv[1])

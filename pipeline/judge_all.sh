@@ -16,6 +16,8 @@ MODELS=(
   "76k 76k_20261127-001436"
 )
 
+# bash pipeline/judge_all.sh
+
 SUMMARY=pipeline/training/logs/judge_all_$(date +%Y%m%d-%H%M%S).txt
 for m in "${MODELS[@]}"; do
   read -r TRAIN_COUNT DIR <<< "$m"
