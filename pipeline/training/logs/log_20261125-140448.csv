@@ -1,0 +1,2 @@
+epoch,step,train_loss,mlp_lr,llm_lr,val_loss,gap,judge_acc,judge_cov
+1,100,2.5363381868600845,2e-05,2.0000000000000003e-06,,,,

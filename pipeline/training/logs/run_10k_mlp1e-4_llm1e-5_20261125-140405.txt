@@ -1,0 +1,2 @@
+start: Wed Nov 25 14:04:05 CET 2026  |  10k  epochs=10  mlp_lr=1e-4  llm_lr=1e-5
+commit: 44d687a

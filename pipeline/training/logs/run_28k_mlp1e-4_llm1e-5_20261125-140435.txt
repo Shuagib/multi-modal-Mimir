@@ -1,0 +1,30 @@
+start: Wed Nov 25 14:04:35 CET 2026  |  28k  epochs=10  mlp_lr=1e-4  llm_lr=1e-5
+commit: 44d687a
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights: 100%|██████████| 339/339 [00:00<00:00, 19420.99it/s]
+Loading weights:   0%|          | 0/131 [00:00<?, ?it/s]Loading weights: 100%|██████████| 131/131 [00:00<00:00, 15479.75it/s]
+┌───────────────┬─────────────────────────────────────────┐
+│ run config                                              │
+├───────────────┼─────────────────────────────────────────┤
+│ data          │ data-28k                                │
+│ train samples │ 28002                                   │
+│ eval samples  │ 1998                                    │
+│ batch size    │ 4                                       │
+│ epochs        │ 10                                      │
+│ steps/epoch   │ 7001                                    │
+│ total steps   │ 70010                                   │
+│ warmup steps  │ 500                                     │
+│ optimizer     │ AdamAtan2                               │
+│ lr            │ 0.0001                                  │
+│ weight decay  │ 0.1                                     │
+│ MLP bias      │ layer1=False, layer2=True               │
+│ MLP params    │ 4.7M                                    │
+│ LLM params    │ 1787M (all trainable)                   │
+│ target_rms    │ 0.010334                                │
+│ LLM           │ danish-foundation-models/DFM-Mimir-v1.5 │
+│ vm            │ google/siglip2-base-patch16-256         │
+│ device        │ cuda                                    │
+└───────────────┴─────────────────────────────────────────┘
+┌───────┬────────┬────────────┬──────────┬──────────┬─────────┬───────────┬───────────┐
+│ epoch │   step │ train loss │       lr │ val loss │     gap │ judge acc │ judge cov │
+├───────┼────────┼────────────┼──────────┼──────────┼─────────┼───────────┼───────────┤
+│     1 │    100 │     2.5363 │  2.0e-05 │          │         │           │           │

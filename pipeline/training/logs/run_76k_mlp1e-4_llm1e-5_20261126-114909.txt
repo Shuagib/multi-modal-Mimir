@@ -1,0 +1,66 @@
+start: Thu Nov 26 11:49:09 CET 2026  |  76k  epochs=10  mlp_lr=1e-4  llm_lr=1e-5
+commit: abc93c6
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights: 100%|██████████| 339/339 [00:00<00:00, 17681.42it/s]
+Loading weights:   0%|          | 0/131 [00:00<?, ?it/s]Loading weights: 100%|██████████| 131/131 [00:00<00:00, 15881.55it/s]
+┌───────────────┬─────────────────────────────────────────┐
+│ run config                                              │
+├───────────────┼─────────────────────────────────────────┤
+│ data          │ data-76k                                │
+│ train samples │ 75920                                   │
+│ eval samples  │ 1998                                    │
+│ batch size    │ 4                                       │
+│ epochs        │ 10                                      │
+│ steps/epoch   │ 18980                                   │
+│ total steps   │ 189800                                  │
+│ warmup steps  │ 500                                     │
+│ optimizer     │ AdamAtan2                               │
+│ lr            │ 0.0001                                  │
+│ weight decay  │ 0.1                                     │
+│ MLP bias      │ layer1=False, layer2=True               │
+│ MLP params    │ 4.7M                                    │
+│ LLM params    │ 1787M (all trainable)                   │
+│ target_rms    │ 0.010334                                │
+│ LLM           │ danish-foundation-models/DFM-Mimir-v1.5 │
+│ vm            │ google/siglip2-base-patch16-256         │
+│ device        │ cuda                                    │
+└───────────────┴─────────────────────────────────────────┘
+┌───────┬────────┬────────────┬──────────┬──────────┬─────────┬───────────┬───────────┐
+│ epoch │   step │ train loss │       lr │ val loss │     gap │ judge acc │ judge cov │
+├───────┼────────┼────────────┼──────────┼──────────┼─────────┼───────────┼───────────┤
+│     1 │    100 │     2.5283 │  2.0e-05 │          │         │           │           │
+│     1 │    200 │     2.3610 │  4.0e-05 │          │         │           │           │
+│     1 │    300 │     2.4478 │  6.0e-05 │          │         │           │           │
+[W1126 11:52:15.208669908 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 12976128, total: 191545606144).
+[W1126 11:52:15.245525321 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 15073280, total: 191545606144).
+Traceback (most recent call last):
+  File "/work/mimir/multi-modal-Mimir/pipeline/training/train.py", line 151, in <module>
+    mimir_loss = llm.model(inputs_embeds=inputs, attention_mask=attention_mask,
+                 ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                           labels=labels, token_type_ids=token_type_ids).loss
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/work/mimir/multi-modal-Mimir/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/work/mimir/multi-modal-Mimir/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/work/mimir/multi-modal-Mimir/.venv/lib/python3.14/site-packages/transformers/utils/generic.py", line 943, in wrapper
+    output = func(self, *args, **kwargs)
+  File "/work/mimir/multi-modal-Mimir/.venv/lib/python3.14/site-packages/transformers/models/hrm_text/modeling_hrm_text.py", line 582, in forward
+    loss = self.loss_function(logits=logits, labels=labels, vocab_size=self.config.vocab_size, **kwargs)
+  File "/work/mimir/multi-modal-Mimir/.venv/lib/python3.14/site-packages/transformers/loss/loss_utils.py", line 70, in ForCausalLMLoss
+    loss = fixed_cross_entropy(logits, shift_labels, num_items_in_batch, ignore_index, **kwargs)
+  File "/work/mimir/multi-modal-Mimir/.venv/lib/python3.14/site-packages/transformers/loss/loss_utils.py", line 40, in fixed_cross_entropy
+    loss = nn.functional.cross_entropy(source, target, ignore_index=ignore_index, reduction=reduction)
+  File "/work/mimir/multi-modal-Mimir/.venv/lib/python3.14/site-packages/torch/nn/functional.py", line 3561, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        input,
+        ^^^^^^
+    ...<5 lines>...
+        label_smoothing,
+        ^^^^^^^^^^^^^^^^
+    )
+    ^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 6.70 GiB. GPU 0 has a total capacity of 178.39 GiB of which 5.97 GiB is free. Process 6291 has 76.25 GiB memory in use. Including non-PyTorch memory, this process has 96.14 GiB memory in use. Of the allocated memory 94.46 GiB is allocated by PyTorch, and 778.35 MiB is reserved by PyTorch but unallocated.
+RUN FAILED (exit 1)
+end: Thu Nov 26 11:52:17 CET 2026  |  took 0h 3m
