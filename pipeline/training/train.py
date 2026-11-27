@@ -66,7 +66,7 @@ optimizer = AdamAtan2([
 ], weight_decay=0.1)
 
 total_steps = len(train_load) * c.num_epochs
-warmup = 500# min(500, int(0.1 * total_steps))     # 500 steps or 10% of total
+warmup = min(500, int(0.1 * total_steps))     # 500 steps or 10% of total
 
 scheduler = get_cosine_with_min_lr_schedule_with_warmup(
     optimizer,
