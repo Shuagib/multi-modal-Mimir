@@ -149,7 +149,16 @@ rule("┌", "┬", "┐")
 row(*COLS)
 rule("├", "┼", "┤")
 
+import copy
+
+run_name = f"{c.TRAIN_COUNT}_{time.strftime('%Y%m%d-%H%M%S')}"
+save_dir = c.checkpoint_dir / run_name
+best_val, best_epoch = float("inf"), 0
+best_mlp_state = best_llm_state = None
+
 for e in range(c.num_epochs):
+    llm.model.train(); 
+    mlp.train()
     running_loss = 0.0
     for batch_num, batch in enumerate(train_load):
        
@@ -206,25 +215,28 @@ for e in range(c.num_epochs):
     row(e + 1, "end", "", "", f"{avg_val:.4f}", f"{v_shuffle - v_ok:+.4f}", f"{acc:.2f}", f"{cov:.2f}")
     rule("├", "┼", "┤")
     log_row(e + 1, "end", "", "", "", avg_val, v_shuffle - v_ok, acc, cov)
+
+    if avg_val < best_val:
+        best_val, best_epoch = avg_val, e + 1
+        save_dir.mkdir(parents=True, exist_ok=True)
+        torch.save({
+            "state_dict": mlp.state_dict(),
+            "target_rms": c.target_rms,
+            "best_epoch": best_epoch,
+            "val_loss": best_val,
+            "run_info": run_info,
+        }, save_dir / "mlp.pt")
+        llm.model.save_pretrained(save_dir / "llm")
+        llm.tokenizer.save_pretrained(save_dir / "llm")
+        best_mlp_state = copy.deepcopy(mlp.state_dict())
+        best_llm_state = {k: v.detach().cpu().clone() for k, v in llm.model.state_dict().items()}
+        print(f"new best (epoch {best_epoch}, val {best_val:.4f}) saved to {save_dir}", flush=True)
     
 rule("└", "┴", "┘")
 
-run_name = f"{c.TRAIN_COUNT}_{time.strftime('%Y%m%d-%H%M%S')}"
-save_dir = c.checkpoint_dir / run_name
-save_dir.mkdir(parents=True, exist_ok=True)
-
-torch.save({
-    "state_dict": mlp.state_dict(),
-    "bias1": mlp.layer1.bias is not None,
-    "bias2": mlp.layer2.bias is not None,
-    "target_rms": c.target_rms,
-    "run_info": run_info,
-}, save_dir / "mlp.pt")
-
-llm.model.save_pretrained(save_dir / "llm")
-llm.tokenizer.save_pretrained(save_dir / "llm")
-
-print(f"saved model to {save_dir}")
+mlp.load_state_dict(best_mlp_state)
+llm.model.load_state_dict(best_llm_state)
+print(f"best epoch {best_epoch} (val {best_val:.4f}) -> {save_dir}")
 
 
 import json
