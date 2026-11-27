@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 from language_model.qwen import Qwen
 from pipeline.training.config import ProjectorTrainConfigQwen
 from pipeline.training.feature_dataset import FeatureDataset
-from projector.two_layer_mlp import MLP
+from projector.two_layer_mlp_new import MLP
 from vision_model.model import SigLIP2
 
 torch.manual_seed(0)

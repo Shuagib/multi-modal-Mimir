@@ -3,7 +3,7 @@ from pathlib import Path
 from PIL import Image
 
 from vision_model.model import SigLIP2
-from projector.two_layer_mlp import MLP
+from projector.two_layer_mlp_new import MLP
 
 from language_model.qwen import Qwen
 from pipeline.utils.image_injection import (insert_special_tokens, inject_patches)

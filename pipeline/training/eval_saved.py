@@ -13,7 +13,7 @@ import torch
 from language_model.mimir import Mimir
 from pipeline.training.config import ProjectorTrainConfig
 from pipeline.training.feature_dataset import FeatureDataset
-from projector.two_layer_mlp import MLP
+from projector.two_layer_mlp_new import MLP
 
 run = Path(sys.argv[1])
 n = int(sys.argv[2]) if len(sys.argv) > 2 else 20

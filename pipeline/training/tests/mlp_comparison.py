@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader
 
 from pipeline.training.config import ProjectorTrainConfig
 from pipeline.training.feature_dataset import FeatureDataset
-from projector.two_layer_mlp import MLP
+from projector.two_layer_mlp_new import MLP
 
 c = ProjectorTrainConfig()
 eval_data = FeatureDataset(c.eval_dir)

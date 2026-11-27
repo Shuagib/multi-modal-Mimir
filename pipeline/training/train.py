@@ -18,7 +18,9 @@ from pipeline.training.build_batch import build_batch
 from pipeline.training.config import ProjectorTrainConfig
 from pipeline.training.feature_dataset import FeatureDataset
 from pipeline.training.tests.image_gap import image_gap
-from projector.two_layer_mlp import MLP
+#from projector.two_layer_mlp_new import MLP
+from projector.two_layer_mlp_old import MLP
+
 from pipeline.training.judge import judge_val
 
 #from pipeline.training.tests.val_loss import val_loss
@@ -53,9 +55,9 @@ eval_load = loader(eval_data)
 # print("token_type_ids" in inspect.signature(llm.model.forward).parameters)
 
 from adam_atan2_pytorch import AdamAtan2
-
 import os
-MLP_LR = float(os.environ.get("MLP_LR", 1e-4))
+
+MLP_LR = float(os.environ.get("MLP_LR", 1e-5))
 LLM_LR = float(os.environ.get("LLM_LR", 1e-5))
 
 optimizer = AdamAtan2([
@@ -64,7 +66,7 @@ optimizer = AdamAtan2([
 ], weight_decay=0.1)
 
 total_steps = len(train_load) * c.num_epochs
-warmup = min(500, int(0.1 * total_steps))     # 500 steps or 10% of total
+warmup = 500# min(500, int(0.1 * total_steps))     # 500 steps or 10% of total
 
 scheduler = get_cosine_with_min_lr_schedule_with_warmup(
     optimizer,

@@ -10,7 +10,7 @@ from transformers import AutoModelForCausalLM
 from language_model.modelHRM import CONDITION, HRMText
 from pipeline.training.config import ProjectorTrainConfigHRM
 from pipeline.training.feature_dataset import FeatureDataset
-from projector.two_layer_mlp import MLP
+from projector.two_layer_mlp_new import MLP
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("train")
