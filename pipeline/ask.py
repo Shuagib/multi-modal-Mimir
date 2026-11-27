@@ -12,7 +12,7 @@ from PIL import Image
 
 from language_model.mimir import Mimir
 from pipeline.training.config import ProjectorTrainConfig
-from projector.two_layer_mlp import MLP
+from projector.two_layer_mlp_new import MLP
 from vision_model.model import SigLIP2
 
 c = ProjectorTrainConfig()

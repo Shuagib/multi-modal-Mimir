@@ -30,11 +30,11 @@ class ProjectorTrainConfig:
 
     batch_size: int = 2
     learning_rate: float = 1e-3
-    num_epochs: int = int(os.environ.get("EPOCHS", 5))
+    num_epochs: int = int(os.environ.get("EPOCHS", "5"))
 
     image_cache_dir: Path = PROJECT_ROOT / "data" / "image_cache"
-    log_dir: Path = PROJECT_ROOT / "pipeline" / "training" / "logs"
-    checkpoint_dir: Path = PROJECT_ROOT / "pipeline" / "training" / "model_saves"
+    log_dir: Path = PROJECT_ROOT / "pipeline" / "training" / "model_saves" / os.environ.get("RUN_GROUP", "") / "logs"
+    checkpoint_dir: Path = PROJECT_ROOT / "pipeline" / "training" / "model_saves" / os.environ.get("RUN_GROUP", "")
 
     # train/eval/test dir
     TRAIN_COUNT = os.environ.get("TRAIN_COUNT", 
