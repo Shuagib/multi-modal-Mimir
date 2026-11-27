@@ -1,56 +1,0 @@
-start: Wed Nov 25 02:36:50 CET 2026  |  1k  epochs=5  mlp_lr=1e-4  llm_lr=1e-5
-commit: c5207c1
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Fetching 4 files:   0%|          | 0/4 [00:00<?, ?it/s]Fetching 4 files:  25%|██▌       | 1/4 [00:08<00:26,  8.96s/it]Fetching 4 files:  50%|█████     | 2/4 [00:10<00:09,  4.59s/it]Fetching 4 files:  75%|███████▌  | 3/4 [00:11<00:03,  3.06s/it]Fetching 4 files: 100%|██████████| 4/4 [00:13<00:00,  2.40s/it]Fetching 4 files: 100%|██████████| 4/4 [00:13<00:00,  3.28s/it]
-Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:  10%|█         | 34/339 [00:00<00:00, 324.70it/s]Loading weights:  33%|███▎      | 112/339 [00:00<00:00, 579.94it/s]Loading weights:  50%|█████     | 171/339 [00:00<00:00, 475.03it/s]Loading weights: 100%|██████████| 339/339 [00:00<00:00, 939.48it/s]
-Loading weights:   0%|          | 0/131 [00:00<?, ?it/s]Loading weights:   5%|▍         | 6/131 [00:00<00:02, 57.41it/s]Loading weights: 100%|██████████| 131/131 [00:00<00:00, 714.91it/s]
-┌───────────────┬─────────────────────────────────────────┐
-│ run config                                              │
-├───────────────┼─────────────────────────────────────────┤
-│ data          │ data-1k                                 │
-│ train samples │ 1002                                    │
-│ eval samples  │ 1998                                    │
-│ batch size    │ 4                                       │
-│ epochs        │ 5                                       │
-│ steps/epoch   │ 251                                     │
-│ total steps   │ 1255                                    │
-│ warmup steps  │ 125                                     │
-│ optimizer     │ AdamAtan2                               │
-│ lr            │ 0.0001                                  │
-│ weight decay  │ 0.1                                     │
-│ MLP bias      │ layer1=False, layer2=True               │
-│ MLP params    │ 4.7M                                    │
-│ LLM params    │ 1787M (all trainable)                   │
-│ target_rms    │ 0.010334                                │
-│ LLM           │ danish-foundation-models/DFM-Mimir-v1.5 │
-│ vm            │ google/siglip2-base-patch16-256         │
-│ device        │ cuda                                    │
-└───────────────┴─────────────────────────────────────────┘
-┌───────┬────────┬────────────┬──────────┬──────────┬─────────┬───────────┬───────────┐
-│ epoch │   step │ train loss │       lr │ val loss │     gap │ judge acc │ judge cov │
-├───────┼────────┼────────────┼──────────┼──────────┼─────────┼───────────┼───────────┤
-│     1 │    100 │     2.4296 │  8.0e-05 │          │         │           │           │
-│     1 │    200 │     2.3383 │  9.9e-05 │          │         │           │           │
-│     1 │    end │            │          │   2.3103 │ -0.0006 │       nan │       nan │
-├───────┼────────┼────────────┼──────────┼──────────┼─────────┼───────────┼───────────┤
-│     2 │    100 │     2.2150 │  9.1e-05 │          │         │           │           │
-│     2 │    200 │     2.1802 │  8.3e-05 │          │         │           │           │
-│     2 │    end │            │          │   2.2525 │ +0.0002 │       nan │       nan │
-├───────┼────────┼────────────┼──────────┼──────────┼─────────┼───────────┼───────────┤
-│     3 │    100 │     2.0579 │  6.6e-05 │          │         │           │           │
-│     3 │    200 │     2.0868 │  5.3e-05 │          │         │           │           │
-│     3 │    end │            │          │   2.2644 │ +0.0019 │       nan │       nan │
-├───────┼────────┼────────────┼──────────┼──────────┼─────────┼───────────┼───────────┤
-│     4 │    100 │     1.9667 │  3.5e-05 │          │         │           │           │
-│     4 │    200 │     2.0238 │  2.5e-05 │          │         │           │           │
-│     4 │    end │            │          │   2.2609 │ +0.0130 │       nan │       nan │
-├───────┼────────┼────────────┼──────────┼──────────┼─────────┼───────────┼───────────┤
-│     5 │    100 │     1.9233 │  1.4e-05 │          │         │           │           │
-│     5 │    200 │     1.9936 │  1.0e-05 │          │         │           │           │
-│     5 │    end │            │          │   2.2501 │ +0.0173 │      1.80 │      1.90 │
-├───────┼────────┼────────────┼──────────┼──────────┼─────────┼───────────┼───────────┤
-└───────┴────────┴────────────┴──────────┴──────────┴─────────┴───────────┴───────────┘
-Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  2.00s/it]Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.00s/it]
-saved model to /work/mimir/multi-modal-Mimir/pipeline/training/model_saves/1k_20261125-024602
-/home/ucloud/.local/share/uv/python/cpython-3.14.10-linux-x86_64-gnu/lib/python3.14/multiprocessing/resource_tracker.py:475: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown: {'/mp-eo7o230c'}
-  warnings.warn(

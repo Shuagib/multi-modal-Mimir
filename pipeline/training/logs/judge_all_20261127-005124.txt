@@ -1,3 +1,0 @@
-1k  judge acc: 5.53 over 300
-10k  judge acc: 6.35 over 300
-28k  judge acc: 6.80 over 300

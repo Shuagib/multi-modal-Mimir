@@ -1,5 +1,0 @@
-start: Wed Nov 25 03:08:10 CET 2026  |  1k  epochs=5  mlp_lr=1e-4  llm_lr=1e-5
-commit: c5207c1
-Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights: 100%|██████████| 339/339 [00:00<00:00, 14589.86it/s]
-/home/ucloud/.local/share/uv/python/cpython-3.14.10-linux-x86_64-gnu/lib/python3.14/multiprocessing/resource_tracker.py:475: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown: {'/mp-6kllsti1'}
-  warnings.warn(
