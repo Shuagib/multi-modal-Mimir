@@ -4,6 +4,7 @@ one question:   uv run -m pipeline.ask pipeline/training/model_saves/76k_2026112
 
 web interface:  uv run --with gradio -m pipeline.ask pipeline/training/model_saves/76k_20261127-001436        (opens http://127.0.0.1:7860)
 """
+import os
 import sys
 from pathlib import Path
 
@@ -12,7 +13,11 @@ from PIL import Image
 
 from language_model.mimir import Mimir
 from pipeline.training.config import ProjectorTrainConfig
-from projector.two_layer_mlp_new import MLP
+
+if os.environ.get("PROJECTOR", "old") == "new":
+    from projector.two_layer_mlp_new import MLP  # 24 tokens
+else:
+    from projector.two_layer_mlp_old import MLP  # 256 tokens
 from vision_model.model import SigLIP2
 
 c = ProjectorTrainConfig()
